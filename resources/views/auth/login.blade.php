@@ -75,7 +75,7 @@
 
     window.addEventListener('keydown',e => {
       var code = e.keyCode || e.which;
-      alert("keyCode = " + code);
+      //alert("keyCode = " + code);
 
     });
 

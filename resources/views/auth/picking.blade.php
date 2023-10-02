@@ -26,7 +26,7 @@
                                     <h5 class="font-weight-bolder">LOGIN</h5>
                                 </div>
                                 <div class="card-body">
-                                  <form class="" action="" method="post" onsubmit="return login_submit()">
+                                  <form id="login_form" onsubmit="return login_submit()">
                                   <table>
                                     <tr>
                                       <td class="input-sm" align="right">Username:</td>
@@ -50,7 +50,7 @@
                                   </table>
 
                                   <div class="text-center">
-                                      <button id="btn-next" type="submit" class="btn btn-sm btn-primary btn-sm w-50 mt-4 mb-0">Next</button>
+                                      <button id="btn-next" type="submit" class="btn btn-sm btn-primary btn-sm w-50 mt-4 mb-0">Login</button>
                                   </div>
                                   </form>
                                 </div>
@@ -83,6 +83,7 @@
                               </ul>
                           </div>
                           <div class="card card-plain">
+                            <label id="btn_logout" style=" position: absolute;  margin: 4px 0px 0px 290px;  float: right;">Logout</label>
                               <div class="card-body">
                                 <table>
                                   <tr>
@@ -113,7 +114,10 @@
                                   <tr>
                                     <td class="input-sm" align="right">Batch/Serial:</td>
                                     <td>
-                                      <input type="text" name="serial" id="serial" class="input-sm"><select class="input-sm" id="select_serial_all" style="width: 20px; display:none;"></select>
+                                      <input type="text" name="serial" id="serial" class="input-sm">
+                                      <select class="input-sm" id="select_serial_all" style="width: 20px; display:none;">
+
+                                      </select>
                                       <p id="serial_error" class="input-sm error" style="display:none">error</p>
                                     </td>
                                   </tr>
@@ -131,7 +135,7 @@
                                     <td class="input-sm" align="right">Pack Qty.: </td>
                                     <td>
                                       <input type="text" name="pack_qty1" id="pack_qty1" class="input-sm" size="8" >
-                                      <input type="text" name="pack_qty2" id="pack_qty2" class="input-sm" size="8" readonly>
+                                      <input type="text" name="pack_qty2" id="pack_qty2" class="input-sm" size="8" >
                                     </td>
                                   </tr>
                                   <tr>
@@ -155,21 +159,43 @@
                 </div>
                 <input type="hidden" name="grade_code_1" id="grade_code_1" value="">
                 <input type="hidden" name="grade_code_2" id="grade_code_2" value="">
+
+                <!-- Modal -->
+                <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Alert</h5>
+                      </div>
+                      <div class="modal-body">
+                        Saved successfully
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" id="close-modal" class="btn btn-primary">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
         </section>
     </main>
 
     <script type="text/javascript">
 
     function login_submit(){
+
       if($('#username').val() == ''){
+
         $('#username_error').css('display','revert').html('Username not found');
         $('#username').focus();
+
       }else{
+
         $('#login_date').val(curr_datetime());
         $('#tab-login').css('display','none');
         $('#tab-picking').css('display','');
         $('.moving-tab').css('width','35%');
         $('#ticket').focus();
+
       }
 
       return false;
@@ -196,11 +222,11 @@
       }).done(function( res ) {
 
         console.log(res);
-        alert('Save successfully');
+        //alert('Save successfully');
+        $('#success-modal').modal('show');
         if(res['status']){
           $('#form_picking')[0].reset();
           $('.error').html('');
-          $('#ticket').focus();
         }else{
           alert('Save error');
         }
@@ -220,6 +246,21 @@
     $(function(){
 
       $('#username').focus();
+
+      $('#close-modal').on('click', function(){
+        $('#success-modal').modal('hide');
+        $('#ticket').focus();
+      });
+      //LOGOUT
+      $('#btn_logout').on('click', function(){
+
+        $('#form_picking')[0].reset();
+        $('#login_form')[0].reset();
+        $('.error').html('');
+        $('#tab-login').css('display','revert');
+        $('#tab-picking').css('display','none');
+        $('#username').focus();
+      });
 
       // TICKET
       $('#ticket').on('keyup', function(){
@@ -278,8 +319,46 @@
       });
 
       $('#position').on('keyup', function(){
+
         $('#position_scan_date').val(curr_datetime());
-        $('#serial').focus();
+        if($(this).val() == ''){
+          return false;
+        }
+        $.ajax({
+          method: "GET",
+          url: "{{route('search_serial')}}",
+          data: {
+            serial: '',
+            position: $('#position').val(),
+            item_code: $('#itemg1g2').val(),
+            grade_code_1: $('#grade_code_1').val(),
+            grade_code_2: $('#grade_code_2').val(),
+          }
+        }).done(function( res ) {
+          console.log(res);
+          (res['cnt_serial'] > 0) ? $('#serial').focus() : $('#pack_qty1').focus();
+          if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
+            if(res['data'].length > 0){
+              $('#select_serial_all').css('display','revert');
+              $('#select_serial_all').find('option').remove();
+              $('#select_serial_all').append($('<option>', {
+                  hidden: true,
+                  text: 'Option 1'
+              }));
+              $.each(res['data'], function(key, value) {
+                   $('#select_serial_all').append($("<option></option>").attr("value", value).text(value));
+              });
+              $('#serial').attr('required','true');
+            }else{
+              $('#pack_qty1').focus();
+            }
+            $('#serial').val('');
+          }else{
+            $('#select_serial_all').css('display','none')
+            $('#serial_error').css('display','none').html('');
+          }
+        });
+
       });
 
       $('#serial').on('keyup', function(){
@@ -301,11 +380,7 @@
             console.log(res);
             if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
               if(res['data'].length > 0){
-                $('#select_serial_all').css('display','revert')
                 $('#serial_error').css('display','revert').html('Serial mismatch');
-                $.each(res['data'], function(key, value) {
-                     $('#select_serial_all').append($("<option></option>").attr("value", value).text(value));
-                });
               }else{
                 $('#serial_error').css('display','revert').html('Serial not found');
                 $('#pack_qty1').focus();

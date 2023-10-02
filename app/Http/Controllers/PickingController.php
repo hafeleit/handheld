@@ -110,12 +110,13 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 					}
 
 	    }
-
 			if (in_array($request->serial, $serial_all)) {
 				$serial_flg = true;
 			}
 
-			return response()->json([ 'status' => true, 'data' => $serial_all, 'serial_flg' => $serial_flg ]);
+			$cnt_serial = count($serial_all);
+
+			return response()->json([ 'status' => true, 'data' => $serial_all, 'serial_flg' => $serial_flg, 'cnt_serial' => $cnt_serial, ]);
 
 		}
 
