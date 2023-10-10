@@ -41,11 +41,19 @@
                                     </tr>
                                     <tr>
                                       <td class="input-sm" align="right">WH Code:</td>
-                                      <td><input type="text" name="wh_code" class="input-sm" ></td>
+                                      <td>
+										<input type="text" name="wh_code" id="wh_code" class="input-sm" >
+										<p id="wh_code_error" class="input-sm error" style="display:none">error</p>
+									  </td>
+
                                     </tr>
                                     <tr>
                                       <td class="input-sm" align="right">Location:</td>
-                                      <td><input type="text" name="location" class="input-sm" ></td>
+                                      <td>
+										<input type="text" name="location" id="location" class="input-sm" >
+										<p id="location_error" class="input-sm error" style="display:none">error</p>
+									  </td>
+
                                     </tr>
                                   </table>
 
@@ -83,7 +91,7 @@
                               </ul>
                           </div>
                           <div class="card card-plain">
-                            <label id="btn_logout" style=" position: absolute;  margin: 4px 0px 0px 290px;  float: right;">Logout</label>
+							  <label id="btn_logout" >Logout</label>
                               <div class="card-body">
                                 <table>
                                   <tr>
@@ -101,20 +109,23 @@
                                     <td>
                                         <input type="text" name="position" id="position" class="input-sm" required>
                                         <input type="hidden" name="position_scan_date" id="position_scan_date">
+										<p id="position_error" class="input-sm error" style="display:none">error</p>
                                     </td>
                                   </tr>
                                   <tr>
                                     <td class="input-sm" align="right">Item/G1/G2: </td>
-                                    <td><input type="text" name="itemg1g2" id="itemg1g2" class="input-sm" readonly></td>
+                                    <td>
+										<input type="text" name="itemg1g2" id="itemg1g2" class="input-sm" readonly style="background-color: gainsboro; border-color: gainsboro;">
+									</td>
                                   </tr>
                                   <tr>
                                     <td class="input-sm" align="right">Item Desc: </td>
-                                    <td><input type="text" name="item_desc" id="item_desc" class="input-sm" readonly></td>
+                                    <td><input type="text" name="item_desc" id="item_desc" class="input-sm" readonly style="background-color: gainsboro; border-color: gainsboro;"></td>
                                   </tr>
                                   <tr>
                                     <td class="input-sm" align="right">Batch/Serial:</td>
                                     <td>
-                                      <input type="text" name="serial" id="serial" class="input-sm">
+                                      <input type="text" name="serial" id="serial" class="input-sm" style="width: 75%;">
                                       <select class="input-sm" id="select_serial_all" style="width: 20px; display:none;">
 
                                       </select>
@@ -129,20 +140,20 @@
                                   </tr>
                                   <tr>
                                     <td class="input-sm" align="right">Pack Code: </td>
-                                    <td><input type="text" name="pack_code" id="pack_code" class="input-sm" readonly></td>
+                                    <td><input type="text" name="pack_code" id="pack_code" class="input-sm" readonly style="background-color: gainsboro; border-color: gainsboro;"></td>
                                   </tr>
                                   <tr>
                                     <td class="input-sm" align="right">Pack Qty.: </td>
                                     <td>
-                                      <input type="text" name="pack_qty1" id="pack_qty1" class="input-sm" size="8" >
-                                      <input type="text" name="pack_qty2" id="pack_qty2" class="input-sm" size="8" >
+                                      <input type="text" name="pack_qty1" id="pack_qty1" class="input-sm" size="5" >
+                                      <input type="text" name="pack_qty2" id="pack_qty2" class="input-sm" size="5" >
                                     </td>
                                   </tr>
                                   <tr>
                                     <td class="input-sm" align="right">Base Qty.: </td>
                                     <td>
-                                      <input type="text" name="base_qty_1" id="base_qty_1" class="input-sm" size="8" readonly>
-                                      <input type="text" name="base_qty_2" id="base_qty_2" class="input-sm" size="8" readonly>
+                                      <input type="text" name="base_qty_1" id="base_qty_1" class="input-sm" size="5" readonly style="background-color: gainsboro; border-color: gainsboro;">
+                                      <input type="text" name="base_qty_2" id="base_qty_2" class="input-sm" size="5" readonly style="background-color: gainsboro; border-color: gainsboro;">
                                       <input type="hidden" name="login_date" id="login_date">
                                     </td>
                                   </tr>
@@ -182,13 +193,21 @@
     <script type="text/javascript">
 
     function login_submit(){
-
-      if($('#username').val() == ''){
+	  $('#username_error').css('display','none').html('');
+	  $('#wh_code_error').css('display','none').html('');
+	  $('#location_error').css('display','none').html('');
+      if( $('#username').val() == '' ){
 
         $('#username_error').css('display','revert').html('Username not found');
         $('#username').focus();
 
-      }else{
+      }else if( $('#wh_code').val() == '' ){
+		$('#wh_code_error').css('display','revert').html('WH Code not found');
+        $('#wh_code').focus();
+	  }else if( $('#location').val() == '' ){
+		$('#location_error').css('display','revert').html('Location not found');
+        $('#location').focus();
+	  }else{
 
         $('#login_date').val(curr_datetime());
         $('#tab-login').css('display','none');
@@ -224,12 +243,23 @@
         console.log(res);
         //alert('Save successfully');
         $('#success-modal').modal('show');
+
+		//$('#success-modal').delay(1000).fadeOut(450);
+		setTimeout(function(){
+			$('#success-modal').modal("hide");
+			$('#ticket').focus();
+		  }, 10000);
+
+
+
         if(res['status']){
           $('#form_picking')[0].reset();
           $('.error').html('');
         }else{
           alert('Save error');
         }
+
+
 
       });
 
@@ -244,6 +274,7 @@
     }
 
     $(function(){
+		//$('#success-modal').modal('show');
 
       $('#username').focus();
 
@@ -257,6 +288,8 @@
         $('#form_picking')[0].reset();
         $('#login_form')[0].reset();
         $('.error').html('');
+		$('#select_serial_all').find('option').remove();
+		$('#select_serial_all').css('display','none');
         $('#tab-login').css('display','revert');
         $('#tab-picking').css('display','none');
         $('#username').focus();
@@ -274,6 +307,8 @@
           url: "{{route('search_ticket')}}",
           data: {
             ticket: ticket,
+            wh_code: $('#wh_code').val(),
+            location: $('#location').val(),
           }
         }).done(function( res ) {
 
@@ -321,6 +356,7 @@
       $('#position').on('keyup', function(){
 
         $('#position_scan_date').val(curr_datetime());
+		$('#select_serial_all').find('option').remove();
         if($(this).val() == ''){
           return false;
         }
@@ -336,27 +372,35 @@
           }
         }).done(function( res ) {
           console.log(res);
-          (res['cnt_serial'] > 0) ? $('#serial').focus() : $('#pack_qty1').focus();
-          if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
-            if(res['data'].length > 0){
-              $('#select_serial_all').css('display','revert');
-              $('#select_serial_all').find('option').remove();
-              $('#select_serial_all').append($('<option>', {
-                  hidden: true,
-                  text: 'Option 1'
-              }));
-              $.each(res['data'], function(key, value) {
-                   $('#select_serial_all').append($("<option></option>").attr("value", value).text(value));
-              });
-              $('#serial').attr('required','true');
-            }else{
-              $('#pack_qty1').focus();
-            }
-            $('#serial').val('');
-          }else{
-            $('#select_serial_all').css('display','none')
-            $('#serial_error').css('display','none').html('');
-          }
+
+		  if(res['status'] == true){
+			  $('#position_error').css('display','none').html('');
+			  (res['cnt_serial'] > 0) ? $('#serial').focus() : $('#pack_qty1').focus();
+			  if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
+				if(res['data'].length > 0){
+				  $('#select_serial_all').css('display','revert');
+				  $('#select_serial_all').find('option').remove();
+				  $('#select_serial_all').append($('<option>', {
+					  hidden: true,
+					  text: 'Option 1'
+				  }));
+				  $.each(res['data'], function(key, value) {
+					   $('#select_serial_all').append($("<option></option>").attr("value", value).text(value));
+				  });
+				  $('#serial').attr('required','true');
+				}else{
+				  $('#pack_qty1').focus();
+				}
+				$('#serial').val('');
+			  }else{
+				$('#select_serial_all').css('display','none');
+				$('#serial_error').css('display','none').html('');
+			  }
+		  }else{
+			$('#position_error').css('display','revert').html('Position not found');
+			$('#select_serial_all').css('display','none');
+			$('#serial').val('');
+		  }
         });
 
       });
