@@ -68,7 +68,7 @@
                     <form id="form_picking" action="" method="" onsubmit="return picking_submit()">
                     <div id="tab-picking" class="row" style="display: none;">
                         <div class="col-xl-4 col-lg-5 col-md-7 mx-lg-0">
-							              <div class="nav-wrapper position-relative end-0">
+						  <?php /*<div class="nav-wrapper position-relative end-0">
                               <ul class="nav nav-pills nav-fill p-1" role="tablist">
                                   <li class="nav-item">
                                       <a class="nav-link mb-0 px-0 py-1 active d-flex align-items-center justify-content-center "
@@ -89,9 +89,10 @@
                                       </a>
                                   </li>
                               </ul>
-                          </div>
+                          </div> <?php */ ?>
                           <div class="card card-plain">
-							  <label id="btn_logout" >Logout</label>
+							  <label id="btn_logout" style="text-align: right;">Logout</label>
+							  <label id="txt_username" >HTH</label>
                               <div class="card-body">
                                 <table>
                                   <tr>
@@ -107,9 +108,9 @@
                                   <tr>
                                     <td class="input-sm" align="right">Position: </td>
                                     <td>
-                                        <input type="text" name="position" id="position" class="input-sm" required>
+                                        <input type="text" name="position" id="position" class="input-sm" required style="background-color: gainsboro; border-color: gainsboro;" disabled>
                                         <input type="hidden" name="position_scan_date" id="position_scan_date">
-										<p id="position_error" class="input-sm error" style="display:none">error</p>
+										<p id="position_error" class="input-sm  error" style="display:none">error</p>
                                     </td>
                                   </tr>
                                   <tr>
@@ -125,7 +126,7 @@
                                   <tr>
                                     <td class="input-sm" align="right">Batch/Serial:</td>
                                     <td>
-                                      <input type="text" name="serial" id="serial" class="input-sm" style="width: 75%;">
+                                      <input type="text" name="serial" id="serial" class="input-sm" style="width: 75%;background-color: gainsboro; border-color: gainsboro;" required disabled>
                                       <select class="input-sm" id="select_serial_all" style="width: 20px; display:none;">
 
                                       </select>
@@ -160,7 +161,7 @@
                                 </table>
 
                                 <div class="text-center">
-                                    <button id="btn-save" type="submit" class="btn btn-sm btn-primary btn-sm w-50 mt-4 mb-0">Save</button>
+                                    <button id="btn-save" type="submit" class="btn btn-sm btn-primary btn-sm w-50 mt-4 mb-0" disabled>Save</button>
                                 </div>
                               </div>
                           </div>
@@ -179,7 +180,7 @@
                         <h5 class="modal-title" id="exampleModalLabel">Alert</h5>
                       </div>
                       <div class="modal-body">
-                        Saved successfully
+                        Save successfully
                       </div>
                       <div class="modal-footer">
                         <button type="button" id="close-modal" class="btn btn-primary">Close</button>
@@ -213,6 +214,7 @@
         $('#tab-login').css('display','none');
         $('#tab-picking').css('display','');
         $('.moving-tab').css('width','35%');
+		$('#txt_username').html($('#username').val());
         $('#ticket').focus();
 
       }
@@ -240,6 +242,14 @@
         }
       }).done(function( res ) {
 
+		$('.error').html('');
+		$('#btn-save').attr('disabled',true);
+		$('#position').css('background-color','gainsboro');
+		    $('#position').css('border-color','gainsboro');
+		    $('#position').attr('disabled', true);
+			$('#serial').css('background-color','gainsboro');
+		    $('#serial').css('border-color','gainsboro');
+		    $('#serial').attr('disabled', true);
         console.log(res);
         //alert('Save successfully');
         $('#success-modal').modal('show');
@@ -248,18 +258,13 @@
 		setTimeout(function(){
 			$('#success-modal').modal("hide");
 			$('#ticket').focus();
-		  }, 10000);
-
-
+		  }, 1000);
 
         if(res['status']){
           $('#form_picking')[0].reset();
-          $('.error').html('');
         }else{
           alert('Save error');
         }
-
-
 
       });
 
@@ -319,6 +324,21 @@
             $('#ticket_error').css('display','revert').html('Ticket not found');
             $('#label-st').css('display','none');
 
+			$('#position').css('background-color','gainsboro');
+		    $('#position').css('border-color','gainsboro');
+		    $('#position').attr('disabled', true);
+		    $('#position').val('');
+			$('#position_error').html('');
+
+			$('#serial').css('background-color','gainsboro');
+		    $('#serial').css('border-color','gainsboro');
+		    $('#serial').attr('disabled', true);
+		    $('#serial').val('');
+			$('#serial_error').html('');
+
+			$('#btn-save').attr('disabled',true);
+			$('#select_serial_all').css('display','none');
+
             $('#itemg1g2').val('');
             $('#item_desc').val('');
             $('#pack_code').val('');
@@ -329,7 +349,9 @@
             return 0;
           }
           $('#ticket_error').css('display','none').html('');
-
+		  $('#position').css('background-color','unset');
+		  $('#position').css('border-color','unset');
+		  $('#position').attr('disabled', false);
           if(res['data']['HPC_IN_STK_TAKE_YN'] == 'Y'){
             $('#label-st').css('display','revert');
           }else{
@@ -355,53 +377,67 @@
 
       $('#position').on('keyup', function(){
 
-        $('#position_scan_date').val(curr_datetime());
-		$('#select_serial_all').find('option').remove();
-        if($(this).val() == ''){
-          return false;
-        }
-        $.ajax({
-          method: "GET",
-          url: "{{route('search_serial')}}",
-          data: {
-            serial: '',
-            position: $('#position').val(),
-            item_code: $('#itemg1g2').val(),
-            grade_code_1: $('#grade_code_1').val(),
-            grade_code_2: $('#grade_code_2').val(),
-          }
-        }).done(function( res ) {
-          console.log(res);
+		if($(this).val() != ''){
 
-		  if(res['status'] == true){
-			  $('#position_error').css('display','none').html('');
-			  (res['cnt_serial'] > 0) ? $('#serial').focus() : $('#pack_qty1').focus();
-			  if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
-				if(res['data'].length > 0){
-				  $('#select_serial_all').css('display','revert');
-				  $('#select_serial_all').find('option').remove();
-				  $('#select_serial_all').append($('<option>', {
-					  hidden: true,
-					  text: 'Option 1'
-				  }));
-				  $.each(res['data'], function(key, value) {
-					   $('#select_serial_all').append($("<option></option>").attr("value", value).text(value));
-				  });
-				  $('#serial').attr('required','true');
-				}else{
-				  $('#pack_qty1').focus();
-				}
-				$('#serial').val('');
-			  }else{
-				$('#select_serial_all').css('display','none');
-				$('#serial_error').css('display','none').html('');
+			$('#position_scan_date').val(curr_datetime());
+			$('#select_serial_all').find('option').remove();
+			if($(this).val() == ''){
+			  return false;
+			}
+			$.ajax({
+			  method: "GET",
+			  url: "{{route('search_serial')}}",
+			  data: {
+				serial: '',
+				position: $('#position').val(),
+				item_code: $('#itemg1g2').val(),
+				grade_code_1: $('#grade_code_1').val(),
+				grade_code_2: $('#grade_code_2').val(),
 			  }
-		  }else{
-			$('#position_error').css('display','revert').html('Position not found');
-			$('#select_serial_all').css('display','none');
-			$('#serial').val('');
-		  }
-        });
+			}).done(function( res ) {
+			  console.log(res);
+
+			  if(res['status'] == true){
+				  $('#position_error').css('display','none').html('');
+				  $('#serial').css('background-color','unset');
+					$('#serial').css('border-color','unset');
+					$('#serial').attr('disabled', false);
+
+				  (res['cnt_serial'] > 0) ? $('#serial').focus() : $('#pack_qty1').focus();
+				  if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
+					if(res['data'].length > 0){
+					  $('#select_serial_all').css('display','revert');
+					  $('#select_serial_all').find('option').remove();
+					  $('#select_serial_all').append($('<option>', {
+						  hidden: true,
+						  text: 'Option 1'
+					  }));
+					  $.each(res['data'], function(key, value) {
+						   $('#select_serial_all').append($("<option></option>").attr("value", value).text(value));
+					  });
+					  $('#serial').attr('required','true');
+					}else{
+					  $('#pack_qty1').focus();
+					}
+					$('#serial').val('');
+				  }else{
+					$('#select_serial_all').css('display','none');
+					$('#serial_error').css('display','none').html('');
+				  }
+			  }else{
+				$('#position_error').css('display','revert').html('Position not found');
+				$('#select_serial_all').css('display','none');
+				$('#serial').val('');
+				$('#serial').css('background-color','gainsboro');
+				$('#serial').css('border-color','gainsboro');
+				$('#serial').attr('disabled', true);
+				$('#serial_error').html('');
+				$('#btn-save').attr('disabled',true);
+				$('#select_serial_all').css('display','none');
+			  }
+			});
+
+		}
 
       });
 
@@ -425,14 +461,16 @@
             if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
               if(res['data'].length > 0){
                 $('#serial_error').css('display','revert').html('Serial mismatch');
+				$('#btn-save').attr('disabled',true);
               }else{
                 $('#serial_error').css('display','revert').html('Serial not found');
                 $('#pack_qty1').focus();
               }
-              $('#serial').val('');
+              //$('#serial').val('');
             }else{
               $('#select_serial_all').css('display','none')
               $('#serial_error').css('display','none').html('');
+			  $('#btn-save').attr('disabled',false);
             }
           });
         }
@@ -444,6 +482,7 @@
         $('#serial').val(serial_val);
         $('#serial_error').css('display','none').html('');
         $("#serial").focus();
+		$('#btn-save').attr('disabled',false);
       });
 
     });
