@@ -43,7 +43,12 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 								from
 									OT_WMS_SYNC_HHD_PICK_IN_TEST
 								WHERE
-									hpc_in_ticket_no = '" . $request->ticket ."'";
+									hpc_in_ticket_no = '" . $request->ticket ."'
+								AND
+									hpc_in_wh_code = '".$request->wh_code."'
+								AND
+									hpc_in_locn_code = '".$request->location."'
+									";
 
 			$conn = $this->conn_orion();
 			$stid = oci_parse($conn, $query_ticket);
@@ -68,7 +73,6 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 				$base_aty_data = oci_fetch_assoc($stid2);
 
 			}
-
 			if($ticket_data){
 				return response()->json([ 'status' => true, 'data' => $ticket_data, 'BASE_QTY' => $base_aty_data]);
 			}else{
@@ -78,6 +82,25 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 
 		public function search_serial(Request $request){
 
+			$query_chk_position = "select HPC_IN_SUGG_POSN from OT_WMS_SYNC_HHD_PICK_IN_TEST
+								WHERE
+									hpc_in_ticket_no = '" . $request->ticket ."'
+								AND
+									hpc_in_wh_code = '".$request->wh_code."'
+								AND
+									hpc_in_locn_code = '".$request->location."'
+								AND
+									HPC_IN_SUGG_POSN = '".$request->position."'";
+
+			$conn = $this->conn_orion();
+			$stid = oci_parse($conn, $query_chk_position);
+			oci_execute($stid);
+			$chk_position = oci_fetch_assoc($stid);
+
+			$position_status = false;
+			if($chk_position){
+				$position_status = true;
+			}
 			$query = "
 				SELECT
 					HPC_BS_SRNO,
@@ -101,6 +124,16 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 			$stid = oci_parse($conn, $query);
 			oci_execute($stid);
 
+			$res = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
+			if(!$res){
+				return response()->json([
+					'status' => $position_status,
+					'data' => '',
+					'serial_flg' => $serial_flg,
+					'cnt_serial' => 0,
+				]);
+			}
+
 			while($res = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)){
 					if($res['HPC_BS_SRNO'] != ''){
 						$serial_all[] = $res['HPC_BS_SRNO'];
@@ -109,14 +142,14 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 						$serial_all[] = $res['HPC_BS_BATCH_NO'];
 					}
 
-	    }
+			}
 			if (in_array($request->serial, $serial_all)) {
 				$serial_flg = true;
 			}
 
 			$cnt_serial = count($serial_all);
 
-			return response()->json([ 'status' => true, 'data' => $serial_all, 'serial_flg' => $serial_flg, 'cnt_serial' => $cnt_serial, ]);
+			return response()->json([ 'status' => $position_status, 'data' => $serial_all, 'serial_flg' => $serial_flg, 'cnt_serial' => $cnt_serial, ]);
 
 		}
 
@@ -229,7 +262,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 								hpc_in_flex_20,
 								'Y',
 							 	'',
-								( ROUND(((NVL(hpc_in_qty, 0) + (NVL(HPC_IN_QTY_LS, 0) / HPC_IN_STK_UOM_LOOSE_1)) * HPC_IN_STK_UOM_CONV) * HPC_IN_BASE_UOM_LOOSE_1)) as hpc_out_reason_code
+							 	1 /* Calculate from the screen and send */
 							FROM
 								ot_wms_sync_hhd_pick_in_test
 							where

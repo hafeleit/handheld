@@ -172,7 +172,7 @@
                 <input type="hidden" name="grade_code_1" id="grade_code_1" value="">
                 <input type="hidden" name="grade_code_2" id="grade_code_2" value="">
 
-                <!-- Modal -->
+                <!-- Modal Success -->
                 <div class="modal fade" id="success-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                   <div class="modal-dialog modal-dialog-centered" role="document">
                     <div class="modal-content">
@@ -184,6 +184,23 @@
                       </div>
                       <div class="modal-footer">
                         <button type="button" id="close-modal" class="btn btn-primary">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+				<!-- Modal Position error-->
+                <div class="modal fade" id="position-error-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Error</h5>
+                      </div>
+                      <div class="modal-body">
+                        Position error
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" id="close-position-error" class="btn btn-primary">Close</button>
                       </div>
                     </div>
                   </div>
@@ -279,13 +296,18 @@
     }
 
     $(function(){
-		//$('#success-modal').modal('show');
+	  //$('#position-error-modal').modal('show');
 
       $('#username').focus();
 
       $('#close-modal').on('click', function(){
         $('#success-modal').modal('hide');
         $('#ticket').focus();
+      });
+
+	  $('#close-position-error').on('click', function(){
+        $('#position-error-modal').modal('hide');
+        $('#position').focus();
       });
       //LOGOUT
       $('#btn_logout').on('click', function(){
@@ -370,6 +392,11 @@
           $('#grade_code_1').val(res['data']['HPC_IN_GRADE_CODE_1']);
           $('#grade_code_2').val(res['data']['HPC_IN_GRADE_CODE_2']);
 
+          $('#position').val('');
+		  $('#select_serial_all').css('display','none');
+		  $('#serial').css('background-color','gainsboro');
+		  $('#serial').css('border-color','gainsboro');
+		  $('#serial').attr('disabled', true);
           $('#position').focus();
         });
 
@@ -388,6 +415,9 @@
 			  method: "GET",
 			  url: "{{route('search_serial')}}",
 			  data: {
+				ticket: $('#ticket').val(),
+				wh_code: $('#wh_code').val(),
+				location: $('#location').val(),
 				serial: '',
 				position: $('#position').val(),
 				item_code: $('#itemg1g2').val(),
@@ -417,6 +447,10 @@
 					  });
 					  $('#serial').attr('required','true');
 					}else{
+					  $('#serial').css('background-color','gainsboro');
+					  $('#serial').css('border-color','gainsboro');
+					  $('#serial').attr('disabled', true);
+					  $('#btn-save').attr('disabled',false);
 					  $('#pack_qty1').focus();
 					}
 					$('#serial').val('');
@@ -425,7 +459,8 @@
 					$('#serial_error').css('display','none').html('');
 				  }
 			  }else{
-				$('#position_error').css('display','revert').html('Position not found');
+				$('#position-error-modal').modal('show');
+				//$('#position_error').css('display','revert').html('Position not found');
 				$('#select_serial_all').css('display','none');
 				$('#serial').val('');
 				$('#serial').css('background-color','gainsboro');
