@@ -272,13 +272,15 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 								hpc_in_flex_20,
 								'Y',
 							 	'',
-							 	1 /* Calculate from the screen and send */
+								( ROUND(((NVL(hpc_in_qty, 0) + (NVL(HPC_IN_QTY_LS, 0) / HPC_IN_STK_UOM_LOOSE_1)) * HPC_IN_STK_UOM_CONV) * HPC_IN_BASE_UOM_LOOSE_1))
 							FROM
 								ot_wms_sync_hhd_pick_in_test
 							where
 								hpc_in_ticket_no = '".$ticket."'
 					";
-
+					/*echo "<pre>";
+					echo $query;
+					dd(0);*/
 					$conn = $this->conn_orion();
 					$stid = oci_parse($conn, $query);
 					$exc = oci_execute($stid);
