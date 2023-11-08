@@ -312,7 +312,7 @@
 			$('#serial').css('background-color','gainsboro');
 		    $('#serial').css('border-color','gainsboro');
 		    $('#serial').attr('disabled', true);
-        console.log(res);
+        //console.log(res);
         //alert('Save successfully');
         $('#success-modal').modal('show');
 
@@ -501,7 +501,7 @@
 				grade_code_2: $('#grade_code_2').val(),
 			  }
 			}).done(function( res ) {
-			  console.log(res);
+			  //console.log(res);
 
 			  if(res['status'] == true){
 				  $('#position_error').css('display','none').html('');
@@ -569,7 +569,7 @@
             }
           }).done(function( res ) {
 
-            console.log(res);
+            //console.log(res);
             if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
               if(res['data'].length > 0){
                 //$('#serial_error').css('display','revert').html('Serial mismatch');
