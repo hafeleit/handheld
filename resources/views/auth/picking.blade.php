@@ -197,7 +197,7 @@
                         <h5 class="modal-title" id="exampleModalLabel">Error</h5>
                       </div>
                       <div class="modal-body">
-                        Position error
+                        Invalid Position
                       </div>
                       <div class="modal-footer">
                         <button type="button" id="close-position-error" class="btn btn-primary">Close</button>
@@ -275,7 +275,7 @@
       }else{
         //$('#error-modal').modal('show');
         $('#location').val('');
-        showErrorModal($('#wh_code'),'WH Code and Location are wrong');
+        showErrorModal($('#wh_code'),'Invalid Warehouse code and location');
       }
 
 
@@ -411,7 +411,7 @@
 
             //$('#ticket_error').css('display','revert').html('Ticket not found');
 
-            showErrorModal($('#ticket'),'Ticket not found');
+            showErrorModal($('#ticket'),'Invalid Ticket scanned');
 
             $('#label-st').css('display','none');
 
@@ -573,7 +573,7 @@
             if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
               if(res['data'].length > 0){
                 //$('#serial_error').css('display','revert').html('Serial mismatch');
-                showErrorModal($('#serial'),'Serial mismatch');
+                showErrorModal($('#serial'),'Invalid Serial/Batch Number');
 				        $('#btn-save').attr('disabled',true);
               }else{
                 $('#serial_error').css('display','revert').html('Serial not found');
