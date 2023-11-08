@@ -146,8 +146,8 @@
                                   <tr>
                                     <td class="input-sm" align="right">Pack Qty.: </td>
                                     <td>
-                                      <input type="text" name="pack_qty1" id="pack_qty1" class="input-sm" size="5" >
-                                      <input type="text" name="pack_qty2" id="pack_qty2" class="input-sm" size="5" >
+                                      <input type="text" name="pack_qty1" id="pack_qty1" class="input-sm" size="5" readonly style="background-color: gainsboro; border-color: gainsboro;">
+                                      <input type="text" name="pack_qty2" id="pack_qty2" class="input-sm" size="5" readonly style="background-color: gainsboro; border-color: gainsboro;">
                                     </td>
                                   </tr>
                                   <tr>
@@ -205,36 +205,81 @@
                     </div>
                   </div>
                 </div>
+                <!-- Modal error-->
+                <div class="modal fade" id="error-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Error</h5>
+                      </div>
+                      <div class="modal-body modal-error">
+                        Error
+
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" id="close-error-modal" class="btn btn-primary">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
         </section>
     </main>
 
     <script type="text/javascript">
 
+    function chk_wh_locn(wh, locn){
+
+      let chk_status = false;
+      $.ajax({
+        method: "GET",
+        url: "{{route('chk_wh_locn')}}",
+        async: false,
+        data: {
+          wh: wh,
+          locn: locn,
+        }
+      }).done(function(res){
+        chk_status = res['status'];
+      });
+
+      return chk_status;
+    }
+
     function login_submit(){
+
 	  $('#username_error').css('display','none').html('');
 	  $('#wh_code_error').css('display','none').html('');
 	  $('#location_error').css('display','none').html('');
-      if( $('#username').val() == '' ){
 
-        $('#username_error').css('display','revert').html('Username not found');
-        $('#username').focus();
+    if( $('#username').val() == '' ){
 
-      }else if( $('#wh_code').val() == '' ){
-		$('#wh_code_error').css('display','revert').html('WH Code not found');
-        $('#wh_code').focus();
-	  }else if( $('#location').val() == '' ){
-		$('#location_error').css('display','revert').html('Location not found');
-        $('#location').focus();
-	  }else{
+      $('#username_error').css('display','revert').html('Username not found');
+      $('#username').focus();
 
+    }else if( $('#wh_code').val() == '' ){
+      $('#wh_code_error').css('display','revert').html('WH Code not found');
+      $('#wh_code').focus();
+    }else if( $('#location').val() == '' ){
+      $('#location_error').css('display','revert').html('Location not found');
+      $('#location').focus();
+    }else{
+
+      let check_wh = chk_wh_locn($('#wh_code').val(), $('#location').val());
+      if(check_wh){
         $('#login_date').val(curr_datetime());
         $('#tab-login').css('display','none');
         $('#tab-picking').css('display','');
         $('.moving-tab').css('width','35%');
-		$('#txt_username').html($('#username').val());
+        $('#txt_username').html($('#username').val());
         $('#ticket').focus();
-
+      }else{
+        //$('#error-modal').modal('show');
+        $('#location').val('');
+        showErrorModal($('#wh_code'),'WH Code and Location are wrong');
       }
+
+
+    }
 
       return false;
     }
@@ -247,11 +292,11 @@
         data: {
           ticket: $('#ticket').val(),
           position: $('#position').val(),
-          item_code: $('#item_code').val(),
-          serial_no: $('#serial_no').val(),
-          batch_no: $('#batch_no').val(),
-          pack_qty_1: $('#pack_qty_1').val(),
-          pack_qty_2: $('#pack_qty_2').val(),
+          item_code: $('#itemg1g2').val(),
+          serial_no: $('#serial').val(),
+          //batch_no: $('#batch_no').val(),
+          pack_qty_1: $('#pack_qty1').val(),
+          pack_qty_2: $('#pack_qty2').val(),
           username: $('#username').val(),
           ticket_scan_date: $('#ticket_scan_date').val(),
           position_scan_date: $('#position_scan_date').val(),
@@ -295,8 +340,28 @@
       return strDate;
     }
 
+    function showErrorModal(ids,msg){
+      $('#error-modal').modal('show');
+      $('.modal-error').html(msg);
+      ids.addClass('focus');
+      ids.val('');
+
+    }
+
+    function closeErrorModal(){
+      $('#error-modal').modal('hide');
+      $('.focus').focus();
+      $('#ticket').removeClass('focus');
+      $('#position').removeClass('focus');
+      $('#wh_code').removeClass('focus');
+    }
+
     $(function(){
-	  //$('#position-error-modal').modal('show');
+	  //$('#error-modal').modal('show');
+
+      $( "#close-error-modal" ).on( "click", function() {
+        closeErrorModal($('#ticket'));
+      } );
 
       $('#username').focus();
 
@@ -305,7 +370,7 @@
         $('#ticket').focus();
       });
 
-	  $('#close-position-error').on('click', function(){
+	    $('#close-position-error').on('click', function(){
         $('#position-error-modal').modal('hide');
         $('#position').focus();
       });
@@ -315,8 +380,8 @@
         $('#form_picking')[0].reset();
         $('#login_form')[0].reset();
         $('.error').html('');
-		$('#select_serial_all').find('option').remove();
-		$('#select_serial_all').css('display','none');
+    		$('#select_serial_all').find('option').remove();
+    		$('#select_serial_all').css('display','none');
         $('#tab-login').css('display','revert');
         $('#tab-picking').css('display','none');
         $('#username').focus();
@@ -339,27 +404,31 @@
           }
         }).done(function( res ) {
 
-          console.log(res);
+          //console.log(res);
           $('#ticket_scan_date').val(curr_datetime());
 
           if(res['status'] == false){
-            $('#ticket_error').css('display','revert').html('Ticket not found');
+
+            //$('#ticket_error').css('display','revert').html('Ticket not found');
+
+            showErrorModal($('#ticket'),'Ticket not found');
+
             $('#label-st').css('display','none');
 
-			$('#position').css('background-color','gainsboro');
-		    $('#position').css('border-color','gainsboro');
-		    $('#position').attr('disabled', true);
-		    $('#position').val('');
-			$('#position_error').html('');
+      			$('#position').css('background-color','gainsboro');
+    		    $('#position').css('border-color','gainsboro');
+    		    $('#position').attr('disabled', true);
+    		    $('#position').val('');
+      			$('#position_error').html('');
 
-			$('#serial').css('background-color','gainsboro');
-		    $('#serial').css('border-color','gainsboro');
-		    $('#serial').attr('disabled', true);
-		    $('#serial').val('');
-			$('#serial_error').html('');
+      			$('#serial').css('background-color','gainsboro');
+    		    $('#serial').css('border-color','gainsboro');
+    		    $('#serial').attr('disabled', true);
+    		    $('#serial').val('');
+      			$('#serial_error').html('');
 
-			$('#btn-save').attr('disabled',true);
-			$('#select_serial_all').css('display','none');
+      			$('#btn-save').attr('disabled',true);
+      			$('#select_serial_all').css('display','none');
 
             $('#itemg1g2').val('');
             $('#item_desc').val('');
@@ -368,43 +437,50 @@
             $('#pack_qty2').val('');
             $('#base_qty_1').val('');
             $('#base_qty_2').val('');
-            return 0;
-          }
-          $('#ticket_error').css('display','none').html('');
-		  $('#position').css('background-color','unset');
-		  $('#position').css('border-color','unset');
-		  $('#position').attr('disabled', false);
-          if(res['data']['HPC_IN_STK_TAKE_YN'] == 'Y'){
-            $('#label-st').css('display','revert');
+
+            $('#ticket').focus();
+
+            return false;
+
           }else{
-            $('#label-st').css('display','none');
+            $('#btn-save').attr('disabled',true);
+            $('#ticket_error').css('display','none').html('');
+      		  $('#position').css('background-color','unset');
+      		  $('#position').css('border-color','unset');
+      		  $('#position').attr('disabled', false);
+            if(res['data']['HPC_IN_STK_TAKE_YN'] == 'Y'){
+              $('#label-st').css('display','revert');
+            }else{
+              $('#label-st').css('display','none');
+            }
+
+            let pack_code = res['data']['HPC_IN_PACK_CODE']+'('+res['data']['HPC_IN_STK_UOM_CONV']+' '+res['data']['HPC_IN_BASE_UOM']+')';
+
+            $('#itemg1g2').val(res['data']['HPC_IN_ITEM_CODE']);
+            $('#item_desc').val(res['data']['HPC_IN_ITEM_DESC']);
+            $('#pack_code').val(pack_code);
+            $('#pack_qty1').val(res['data']['HPC_IN_QTY']);
+            $('#pack_qty2').val(res['data']['HPC_IN_QTY_LS']);
+            $('#base_qty_1').val(res['BASE_QTY']['BASE_QTY']);
+            $('#base_qty_2').val(res['data']['HPC_IN_UOM_CODE']);
+            $('#grade_code_1').val(res['data']['HPC_IN_GRADE_CODE_1']);
+            $('#grade_code_2').val(res['data']['HPC_IN_GRADE_CODE_2']);
+
+            $('#position').val('');
+      		  $('#select_serial_all').css('display','none');
+      		  $('#serial').css('background-color','gainsboro');
+      		  $('#serial').css('border-color','gainsboro');
+      		  $('#serial').attr('disabled', true);
+            $('#position').focus();
           }
 
-          let pack_code = res['data']['HPC_IN_PACK_CODE']+'('+res['data']['HPC_IN_STK_UOM_CONV']+' '+res['data']['HPC_IN_BASE_UOM']+')';
-
-          $('#itemg1g2').val(res['data']['HPC_IN_ITEM_CODE']);
-          $('#item_desc').val(res['data']['HPC_IN_ITEM_DESC']);
-          $('#pack_code').val(pack_code);
-          $('#pack_qty1').val(res['data']['HPC_IN_QTY']);
-          $('#pack_qty2').val(res['data']['HPC_IN_QTY_LS']);
-          $('#base_qty_1').val(res['BASE_QTY']['BASE_QTY']);
-          $('#base_qty_2').val(res['data']['HPC_IN_UOM_CODE']);
-          $('#grade_code_1').val(res['data']['HPC_IN_GRADE_CODE_1']);
-          $('#grade_code_2').val(res['data']['HPC_IN_GRADE_CODE_2']);
-
-          $('#position').val('');
-		  $('#select_serial_all').css('display','none');
-		  $('#serial').css('background-color','gainsboro');
-		  $('#serial').css('border-color','gainsboro');
-		  $('#serial').attr('disabled', true);
-          $('#position').focus();
         });
 
       });
 
       $('#position').on('keyup', function(){
 
-		if($(this).val() != ''){
+		    if($(this).val() != ''){
 
 			$('#position_scan_date').val(curr_datetime());
 			$('#select_serial_all').find('option').remove();
@@ -432,8 +508,8 @@
 				  $('#serial').css('background-color','unset');
 					$('#serial').css('border-color','unset');
 					$('#serial').attr('disabled', false);
-
-				  (res['cnt_serial'] > 0) ? $('#serial').focus() : $('#pack_qty1').focus();
+          $('#serial').focus();
+				  //(res['cnt_serial'] > 0) ? $('#serial').focus() : $('#pack_qty1').focus();
 				  if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
 					if(res['data'].length > 0){
 					  $('#select_serial_all').css('display','revert');
@@ -451,7 +527,7 @@
 					  $('#serial').css('border-color','gainsboro');
 					  $('#serial').attr('disabled', true);
 					  $('#btn-save').attr('disabled',false);
-					  $('#pack_qty1').focus();
+					  //$('#pack_qty1').focus();
 					}
 					$('#serial').val('');
 				  }else{
@@ -460,6 +536,7 @@
 				  }
 			  }else{
 				$('#position-error-modal').modal('show');
+        $('#position').val('');
 				//$('#position_error').css('display','revert').html('Position not found');
 				$('#select_serial_all').css('display','none');
 				$('#serial').val('');
@@ -495,8 +572,9 @@
             console.log(res);
             if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
               if(res['data'].length > 0){
-                $('#serial_error').css('display','revert').html('Serial mismatch');
-				$('#btn-save').attr('disabled',true);
+                //$('#serial_error').css('display','revert').html('Serial mismatch');
+                showErrorModal($('#serial'),'Serial mismatch');
+				        $('#btn-save').attr('disabled',true);
               }else{
                 $('#serial_error').css('display','revert').html('Serial not found');
                 $('#pack_qty1').focus();

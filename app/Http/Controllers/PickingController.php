@@ -80,6 +80,26 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 			}
 		}
 
+		public function chk_wh_locn(Request $request){
+
+			$wh = $request->wh ?? '';
+			$locn = $request->locn ?? '';
+			$query = "SELECT WL_WH_CODE, WL_LOCN_CODE FROM OM_WAREHOUSE_LOCN WHERE WL_WH_CODE = '".$wh."' AND WL_LOCN_CODE = '".$locn."'";
+			$conn = $this->conn_orion();
+			$stid = oci_parse($conn, $query);
+			oci_execute($stid);
+			$chk_wh_locn = oci_fetch_assoc($stid);
+			if($chk_wh_locn){
+				return response()->json([
+					'status' => true,
+				]);
+			}else{
+				return response()->json([
+					'status' => false,
+				]);
+			}
+		}
+
 		public function search_serial(Request $request){
 
 			$query_chk_position = "select HPC_IN_SUGG_POSN from OT_WMS_SYNC_HHD_PICK_IN_TEST
@@ -124,16 +144,6 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 			$stid = oci_parse($conn, $query);
 			oci_execute($stid);
 
-			$res = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS);
-			if(!$res){
-				return response()->json([
-					'status' => $position_status,
-					'data' => '',
-					'serial_flg' => $serial_flg,
-					'cnt_serial' => 0,
-				]);
-			}
-
 			while($res = oci_fetch_array($stid, OCI_ASSOC+OCI_RETURN_NULLS)){
 					if($res['HPC_BS_SRNO'] != ''){
 						$serial_all[] = $res['HPC_BS_SRNO'];
@@ -170,7 +180,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 				$position = $request->position ?? '';
 				$item_code = $request->item_code ?? '';
 				$serial_no = $request->serial_no ?? '';
-				$batch_no = $request->batch_no ?? '';
+				//$batch_no = $request->batch_no ?? '';
 				$pack_qty_1 = $request->pack_qty_1 ?? '';
 				$pack_qty_2 = $request->pack_qty_2 ?? '';
 				$username = $request->username ?? '';
@@ -219,13 +229,13 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 										WHERE hpc_bs_posn_code = '".$position."' AND hpc_bs_item_code = '".$item_code."' AND hpc_bs_srno = '".$serial_no."')
 									else (
 										SELECT HPC_BS_PALLET_NO FROM OT_WMS_SYNC_HHD_PICK_BTSR_TEST
-										WHERE hpc_bs_posn_code = '".$position."' AND hpc_bs_item_code = '".$item_code."' AND HPC_BS_BATCH_NO = '".$batch_no."')
+										WHERE hpc_bs_posn_code = '".$position."' AND hpc_bs_item_code = '".$item_code."' AND HPC_BS_BATCH_NO = '".$serial_no."')
 						 		end,
 						 		case
-									when hpc_in_batch_no is not null then hpc_in_batch_no else null
+									when hpc_in_batch_no is not null then '".$serial_no."' else null
 								end,
 						 		case
-									when hpc_in_srno is not null then hpc_in_srno else null end,
+									when hpc_in_srno is not null then '".$serial_no."' else null end,
 						 		'".$pack_qty_1."', /* pack qty 1 */
 						 		'".$pack_qty_2."', /* pack qty 2 */
 							 	'".$username."', /* user login */
