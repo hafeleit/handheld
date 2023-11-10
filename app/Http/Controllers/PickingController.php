@@ -18,12 +18,17 @@ class PickingController extends Controller
 
 		}
 
-    public function index()
+		public function index()
     {
-
-		return view('auth.picking');
-
+			return view('pages.handheld.index');
     }
+
+    public function picking()
+    {
+			return view('pages.handheld.picking');
+    }
+
+
 
 		public function search_ticket(Request $request){
 

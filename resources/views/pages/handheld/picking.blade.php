@@ -20,9 +20,11 @@
                 <div class="container">
 
                     <div class="row">
+                        <a href="{{ROUTE('index')}}" style="position: absolute;top: -4px;z-index:9;width: 50%;"><label id="btn_home">HOME</label></a>
                         <div id="tab-login" class="col-xl-5 col-lg-5 col-md-7 mx-lg-0" style="">
                             <div class="card card-plain">
-                                <div class="card-header pb-0 text-start">
+
+                                <div class="card-header pb-0 text-start text-center">
                                     <h5 class="font-weight-bolder">LOGIN</h5>
                                 </div>
                                 <div class="card-body">
@@ -92,7 +94,7 @@
                           </div> <?php */ ?>
                           <div class="card card-plain">
 							  <label id="btn_logout" style="text-align: right;">Logout</label>
-							  <label id="txt_username" >HTH</label>
+                <label id="txt_username" style="position: absolute;text-align: right;width: 85%;">( HTHxxxx )</label>
                               <div class="card-body">
                                 <table>
                                   <tr>
@@ -270,7 +272,7 @@
         $('#tab-login').css('display','none');
         $('#tab-picking').css('display','');
         $('.moving-tab').css('width','35%');
-        $('#txt_username').html($('#username').val());
+        $('#txt_username').html('( '+$('#username').val()+' ) | ');
         $('#ticket').focus();
       }else{
         //$('#error-modal').modal('show');

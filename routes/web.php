@@ -27,10 +27,15 @@ use App\Http\Controllers\ResetPassword;
 use App\Http\Controllers\ChangePassword;
 use App\Http\Controllers\PickingController;
 
+
 Route::get('/search_ticket', [PickingController::class, 'search_ticket'])->middleware('guest')->name('search_ticket');
 Route::get('/search_serial', [PickingController::class, 'search_serial'])->middleware('guest')->name('search_serial');
 Route::get('/chk_wh_locn', [PickingController::class, 'chk_wh_locn'])->middleware('guest')->name('chk_wh_locn');
 Route::get('/save_picking', [PickingController::class, 'store'])->middleware('guest')->name('save_picking');
+
+
+
+Route::get('/picking', [PickingController::class, 'picking'])->middleware('guest')->name('picking');
 
 Route::get('/', function () {return redirect('/dashboard');})->middleware('auth');
 	Route::get('/register', [RegisterController::class, 'create'])->middleware('guest')->name('register');
@@ -54,4 +59,4 @@ Route::group(['middleware' => 'auth'], function () {
 	Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 });
 
-Route::get('/', [PickingController::class, 'index'])->middleware('guest');
+Route::get('/', [PickingController::class, 'index'])->middleware('guest')->name('index');
