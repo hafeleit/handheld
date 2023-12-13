@@ -18,17 +18,40 @@ class PickingController extends Controller
 
 		}
 
-		public function index()
-    {
-			return view('pages.handheld.index');
-    }
+		public function index(Request $request)
+		{
+				$login_date = $request->login_date ?? '';
+				$txt_username = $request->txt_username ?? '';
+				$txt_wh_code = $request->txt_wh_code ?? '';
+				$txt_location = $request->txt_location ?? '';
 
-    public function picking()
-    {
-			return view('pages.handheld.picking');
-    }
+				return view('pages.handheld.index',['txt_username' => $txt_username, 'login_date' => $login_date, 'txt_wh_code' => $txt_wh_code, 'txt_location' => $txt_location]);
+		}
 
+		public function login()
+		{
+				return view('pages.handheld.login');
+		}
 
+		public function picking(Request $request)
+		{
+				$login_date = $request->login_date ?? '';
+				$txt_username = $request->txt_username ?? '';
+				$txt_wh_code = $request->txt_wh_code ?? '';
+				$txt_location = $request->txt_location ?? '';
+
+				return view('pages.handheld.picking',['txt_username' => $txt_username, 'login_date' => $login_date, 'txt_wh_code' => $txt_wh_code, 'txt_location' => $txt_location]);
+		}
+
+		public function pigeonhole(Request $request)
+		{
+				$login_date = $request->login_date ?? '';
+				$txt_username = $request->txt_username ?? '';
+				$txt_wh_code = $request->txt_wh_code ?? '';
+				$txt_location = $request->txt_location ?? '';
+
+				return view('pages.handheld.pigeonhole',['txt_username' => $txt_username, 'login_date' => $login_date, 'txt_wh_code' => $txt_wh_code, 'txt_location' => $txt_location]);
+		}
 
 		public function search_ticket(Request $request){
 
@@ -54,7 +77,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 								AND
 									hpc_in_locn_code = '".$request->location."'
 									";
-
+//dd($query_ticket);
 			$conn = $this->conn_orion();
 			$stid = oci_parse($conn, $query_ticket);
 			oci_execute($stid);
@@ -80,6 +103,36 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 			}
 			if($ticket_data){
 				return response()->json([ 'status' => true, 'data' => $ticket_data, 'BASE_QTY' => $base_aty_data]);
+			}else{
+				return response()->json([ 'status' => false, 'message' => 'no data', ]);
+			}
+		}
+
+		public function search_pgh(Request $request){
+
+			if($request->ticket == ''){
+				return response()->json([ 'status' => false, 'message' => 'no data', ]);
+			}
+
+			$query = "SELECT * FROM OT_WMS_HHD_PGH_IN_TEST WHERE WHP_IN_TICKET_NO ='".$request->ticket."'";
+			$conn = $this->conn_orion();
+			$stid = oci_parse($conn, $query);
+			oci_execute($stid);
+			$ticket_data = oci_fetch_assoc($stid);
+
+			$query = "SELECT Count(*) as remaining FROM (
+  SELECT * FROM  OT_WMS_HHD_PGH_IN_TEST  WHERE  (WWP_IN_REF_TXN_CODE,wwp_in_ref_no) IN(
+    SELECT WWP_IN_REF_TXN_CODE,WWP_IN_REF_NO FROM OT_WMS_HHD_PGH_IN_TEST  WHERE   WHP_IN_TICKET_NO ='".$request->ticket."')
+    AND WHP_IN_WWOD_SYS_ID  NOT IN (SELECT WHP_OUT_WWOD_SYS_ID FROM OT_WMS_HHD_PGH_OUT_TEST  WHERE WWP_IN_REF_TXN_CODE=WWP_OUT_REF_TXN_CODE AND WWP_IN_REF_NO=WWP_OUT_REF_NO)
+    MINUS
+    SELECT * FROM  OT_WMS_HHD_PGH_IN_TEST WHERE   WHP_IN_TICKET_NO ='".$request->ticket."')";
+			$conn = $this->conn_orion();
+			$stid = oci_parse($conn, $query);
+			oci_execute($stid);
+			$remaining = oci_fetch_assoc($stid);
+
+			if($ticket_data){
+				return response()->json([ 'status' => true, 'data' => $ticket_data, 'remaining' => $remaining]);
 			}else{
 				return response()->json([ 'status' => false, 'message' => 'no data', ]);
 			}
@@ -175,6 +228,84 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
     {
         //
     }
+
+	public function save_pgh(Request $request){
+
+		$ticket = $request->ticket ?? '';
+		$ticket_scan_date = $request->ticket_scan_date ?? '';
+		$pgh_scan_date = $request->pgh_scan_date ?? '';
+		$username = $request->username ?? '';
+		$login_date = $request->login_date ?? '';
+
+		$query = "
+		INSERT INTO OT_WMS_HHD_PGH_OUT_TEST
+			SELECT
+				whp_in_comp_code,
+				whp_in_wh_code,
+				whp_in_locn_code,
+				whp_in_wave_dt,
+				whp_in_wave_id,
+				wwp_in_ref_txn_code,
+				wwp_in_ref_no,
+				whp_in_sugg_posn,
+				whp_in_pallet_no,
+				whp_in_item_code,
+				whp_in_item_desc,
+				whp_in_grade_code_1,
+				whp_in_grade_code_2,
+				whp_in_pack_code,
+				whp_in_uom_code,
+				whp_in_qty,
+				whp_in_qty_ls,
+				whp_in_qty_bu,
+				whp_in_batch_no,
+				whp_in_srno,
+				whp_in_work_order_id,
+				whp_in_work_order_dt,
+				whp_in_ticket_no,
+				whp_in_assigned_user,
+				whp_in_wave_alphabet,
+				whp_in_wwod_sys_id,
+				whp_in_pgn_hole_posn_code,
+				whp_in_pgn_hole_posn_no,
+				whp_in_pgn_hole_line,
+				whp_in_sugg_posn_no,
+				whp_in_bar_code,
+				'orionadmin' as whp_out_device_id,
+				'hthbkkapp113' as whp_out_device_name,
+				TO_DATE('".$ticket_scan_date."', 'DD/MM/YYYY HH24:MI:SS') as whp_out_ticket_scan_dt,
+				TO_DATE('".$pgh_scan_date."', 'DD/MM/YYYY HH24:MI:SS') as whp_out_pgh_scan_dt,
+				'".$username."' as whp_out_cr_uid,
+				TO_DATE('".$login_date."', 'DD/MM/YYYY HH24:MI:SS') as whp_out_cr_dt,
+				whp_in_base_uom_qty,
+				whp_in_base_uom_qty_ls,
+				whp_in_base_uom_qty_bu
+			FROM
+				OT_WMS_HHD_PGH_IN_TEST
+			WHERE
+				WHP_IN_TICKET_NO = '".$ticket."'
+		";
+
+		/*echo "<pre>";
+					echo $query;
+					dd(0);*/
+
+		$conn = $this->conn_orion();
+		$stid = oci_parse($conn, $query);
+		$exc = oci_execute($stid);
+
+		if($exc){
+			return response()->json([
+				'status' => true,
+				'message' => 'insert Successfuly',
+			]);
+		}else{
+			return response()->json([
+				'status' => false,
+				'message' => 'insert error'
+			]);
+		}
+	}
 
     /**
      * Store a newly created resource in storage.

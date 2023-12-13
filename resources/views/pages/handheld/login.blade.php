@@ -16,46 +16,56 @@
   }
 </style>
 <div class="container">
-    
-    <div class="row" id="icon_box">
-        <div class="col-xl-4" style="position: relative;">
-            <div class="row">
-				
-					<div class="d-flex align-items-center" style="padding-bottom: 50px;">
+    <div class="row">
+        
+        <div id="tab-login" class="col-xl-5 col-lg-5 col-md-7 mx-lg-0" style="">
+            <div class="card card-plain">
+
+                <div class="d-flex align-items-center" style="padding-bottom: 50px;">
 						
-						<p class="mb-0"><h3 class="text-primary" style="position: absolute;top: 14px;left: 50%;transform: translate(-50%, 0);">HOME</h3></p>
-						<p class="mb-0 ms-auto">
-							<span id="btn_logout" class="mb-2 text-xs">Logout</span>
-						</p>
-					</div>
-				  <form id="select_module_form" action="" method="post" >
-					{{ csrf_field() }}
-					<input type="hidden" name="login_date" id="login_date" value="{{$login_date}}" />
-					<input type="hidden" name="txt_username" id="txt_username" value="{{$txt_username}}" />
-					<input type="hidden" name="txt_wh_code" id="txt_wh_code" value="{{$txt_wh_code}}" />
-					<input type="hidden" name="txt_location" id="txt_location" value="{{$txt_location}}" />
-				  </form>
-                  <div class="col-auto" onclick="picking_submit('picking')">
-                    <a href="javascript::;">
-                      <div class="avatar avatar-xl position-relative">
-                        <img src="/img/picking.png" alt="profile_image" class="w-100 border-radius-lg shadow-sm" style="padding: 2px;">
-                      </div>
-                      <div class="text-uppercase text-center text-sm">
-                        Picking
-                      </div>
-                    </a>
-                  </div>
-                  <div class="col-auto" style="text-align:center" onclick="picking_submit('pigeonhole')">
-                    <a href="javascript::;">
-                      <div class="avatar avatar-xl position-relative">
-                        <img src="/img/pgh.png" alt="profile_image" class="w-100 border-radius-lg shadow-sm" style="padding: 2px;">
-                      </div>
-                      <div class="text-uppercase text-center text-sm">
-                        pigeonhole
-                      </div>
-                    
-                  </div>
+					<p class="mb-0"><h3 class="text-primary" style="position: absolute;top: 14px;left: 50%;transform: translate(-50%, 0);">LOGIN</h3></p>
+						
+				</div>
 				
+                <div class="card-body">
+                  <form id="login_form" action="{{ROUTE('hhd_home')}}" method="post" onsubmit="return login_submit()">
+				  {{ csrf_field() }}
+				  <input type="hidden" name="login_date" id="login_date" />
+                  <table>
+                    <tr>
+                      <td class="input-sm" align="right">Username:</td>
+                      <td>
+                        <input type="text" name="txt_username" id="txt_username" class="input-sm"  value="{{ $data['HPC_IN_COMP_CODE'] ?? '' }}">
+                        <p id="username_error" class="input-sm error" style="display:none">error</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="input-sm" align="right">Password:</td>
+                      <td><input type="password" name="password" class="input-sm" ></td>
+                    </tr>
+                    <tr>
+                      <td class="input-sm" align="right">WH Code:</td>
+                      <td>
+                        <input type="text" name="txt_wh_code" id="txt_wh_code" class="input-sm" >
+                        <p id="wh_code_error" class="input-sm error" style="display:none">error</p>
+                      </td>
+
+                    </tr>
+                    <tr>
+                      <td class="input-sm" align="right">Location:</td>
+                      <td>
+                        <input type="text" name="txt_location" id="txt_location" class="input-sm" >
+                        <p id="location_error" class="input-sm error" style="display:none">error</p>
+                      </td>
+
+                    </tr>
+                  </table>
+
+                  <div class="text-center">
+                      <button id="login_btn" type="submit" class="btn btn-sm btn-primary btn-sm w-50 mt-4 mb-0">Login</button>
+                  </div>
+                  </form>
+                </div>
             </div>
         </div>
     </div>
@@ -79,13 +89,10 @@
 </div>
 <script type="text/javascript">
     $(function(){
-      $('#username').focus();
+      $('#txt_username').focus();
       $( "#close-error-modal" ).on( "click", function() {
         closeErrorModal($('#ticket'));
       } );
-	  $('#btn_logout').on('click', function(){
-        window.location.href = "{{ROUTE('hhd_login')}}";
-      });
     });
 	
 	function picking_submit(act){
@@ -107,31 +114,28 @@
   	  $('#wh_code_error').css('display','none').html('');
   	  $('#location_error').css('display','none').html('');
 
-      if( $('#username').val() == '' ){
+      if( $('#txt_username').val() == '' ){
 
         $('#username_error').css('display','revert').html('Username not found');
-        $('#username').focus();
+        $('#txt_username').focus();
 
-      }else if( $('#wh_code').val() == '' ){
+      }else if( $('#txt_wh_code').val() == '' ){
         $('#wh_code_error').css('display','revert').html('WH Code not found');
-        $('#wh_code').focus();
-      }else if( $('#location').val() == '' ){
+        $('#txt_wh_code').focus();
+      }else if( $('#txt_location').val() == '' ){
         $('#location_error').css('display','revert').html('Location not found');
-        $('#location').focus();
+        $('#txt_location').focus();
       }else{
 
-        let check_wh = chk_wh_locn($('#wh_code').val(), $('#location').val());
+        let check_wh = chk_wh_locn($('#txt_wh_code').val(), $('#txt_location').val());
         if(check_wh){
           $('#login_date').val(curr_datetime());
-		  $('#txt_username').val($('#username').val());
-		  $('#txt_wh_code').val($('#wh_code').val());
-		  $('#txt_location').val($('#location').val());
-          $('#tab-login').css('display','none');
-          $('#icon_box').css('display','');
+		  
+		  return true;
         }else{
           //$('#error-modal').modal('show');
-          $('#location').val('');
-          showErrorModal($('#wh_code'),'Invalid Warehouse code and location');
+          $('#txt_location').val('');
+          showErrorModal($('#txt_wh_code'),'Invalid Warehouse code and location');
         }
       }
 
@@ -176,7 +180,7 @@
       $('.focus').focus();
       $('#ticket').removeClass('focus');
       $('#position').removeClass('focus');
-      $('#wh_code').removeClass('focus');
+      $('#txt_wh_code').removeClass('focus');
     }
 </script>
 @endsection
