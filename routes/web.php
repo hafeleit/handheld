@@ -17,7 +17,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\RegisterController;
@@ -27,28 +26,24 @@ use App\Http\Controllers\ResetPassword;
 use App\Http\Controllers\ChangePassword;
 use App\Http\Controllers\PickingController;
 
-
 Route::get('/search_ticket', [PickingController::class, 'search_ticket'])->middleware('guest')->name('search_ticket');
 Route::get('/search_pgh', [PickingController::class, 'search_pgh'])->middleware('guest')->name('search_pgh');
+Route::get('/search_putaway', [PickingController::class, 'search_putaway'])->middleware('guest')->name('search_putaway');
 Route::get('/search_serial', [PickingController::class, 'search_serial'])->middleware('guest')->name('search_serial');
 Route::get('/chk_wh_locn', [PickingController::class, 'chk_wh_locn'])->middleware('guest')->name('chk_wh_locn');
 Route::get('/save_picking', [PickingController::class, 'store'])->middleware('guest')->name('save_picking');
 Route::get('/save_pgh', [PickingController::class, 'save_pgh'])->middleware('guest')->name('save_pgh');
-
-
+Route::get('/save_putaway', [PickingController::class, 'save_putaway'])->middleware('guest')->name('save_putaway');
 
 Route::post('/picking', [PickingController::class, 'picking'])->middleware('guest')->name('picking');
 Route::post('/pigeonhole', [PickingController::class, 'pigeonhole'])->middleware('guest')->name('pigeonhole');
+Route::post('/putaway', [PickingController::class, 'putaway'])->middleware('guest')->name('putaway');
 Route::post('/home', [PickingController::class, 'index'])->middleware('guest')->name('hhd_home');
-Route::get('/home', function(){
-	return redirect()->route('hhd_login');
-} );
-Route::get('/picking', function(){
-	return redirect()->route('hhd_login');
-} );
-Route::get('/pigeonhole', function(){
-	return redirect()->route('hhd_login');
-} );
+
+Route::get('/home', function(){	return redirect()->route('hhd_login');} );
+Route::get('/picking', function(){ return redirect()->route('hhd_login');} );
+Route::get('/pigeonhole', function(){ return redirect()->route('hhd_login');} );
+Route::get('/putaway', function(){ return redirect()->route('hhd_login');} );
 
 Route::get('/', function () {return redirect('/dashboard');})->middleware('auth');
 	Route::get('/register', [RegisterController::class, 'create'])->middleware('guest')->name('register');

@@ -25,7 +25,7 @@
 						<input type="hidden" name="txt_location" id="txt_location" value="{{$txt_location}}">
 						<input type="hidden" name="txt_username" id="txt_username" value="{{$txt_username}}">
 					</form>
-                    <form id="form_picking" action="" method="" onsubmit="return picking_submit()">
+                    <form id="form_picking" action="" method="" onsubmit="return putaway_submit()">
                     <div id="tab-picking" class="row" style="">
 
 
@@ -35,7 +35,7 @@
                                 <p class="mb-0">
 									<a href="javascript::;" onclick="hhd_home_back()" ><span class="mb-2 text-xs">Home</span></a>
 								</p>
-                                <p class="mb-0"><h3 class="text-primary" style="position: absolute;top: 14px;left: 50%;transform: translate(-50%, 0);">PICKING</h3></p>
+                                <p class="mb-0"><h3 class="text-primary" style="position: absolute;top: 14px;left: 50%;transform: translate(-50%, 0);">PUT AWAY</h3></p>
                                 <p class="mb-0 ms-auto">
 									<a href="javascript::;" ><span id="btn_logout" class="mb-2 text-xs">Logout</span></a>
 								</p>
@@ -47,6 +47,25 @@
                             </div>
                 <label id="txt_username" style="position: absolute;text-align: right;width: 85%;"></label>
                               <div class="card-body">
+								  <div class="row">
+									<div class="col-6">
+										<div class="custom-control custom-checkbox text-end">
+										  <input type="checkbox" class="custom-control-input putaway_type" id="customCheck1" name="putaway_type" value="P">
+										  <label class="custom-control-label" for="customCheck1">By Pallet</label>
+										</div>
+									</div>
+									<div class="col-6">
+										<div class="custom-control custom-checkbox">
+										  <input type="checkbox" class="custom-control-input putaway_type" id="customCheck2" name="putaway_type" value="G">
+										  <label class="custom-control-label" for="customCheck2">By Group</label>
+										</div>
+									</div>
+								  </div>
+								<script>
+									$(document).on('click', 'input[type="checkbox"]', function() {
+										$('input[type="checkbox"]').not(this).prop('checked', false);
+									});
+								</script>
                                 <table>
                                   <tr>
                                     <td class="input-sm" align="right">Ticket:</td>
@@ -241,11 +260,16 @@
       return false;
     }
 
-    function picking_submit(){
+    function putaway_submit(){
+
+		let putaway_type = $('input[name="putaway_type"]:checked').val();
+		if (typeof putaway_type === "undefined") {
+			putaway_type = '';
+		}
 
       $.ajax({
         method: "GET",
-        url: "{{route('save_picking')}}",
+        url: "{{route('save_putaway')}}",
         data: {
           ticket: $('#ticket').val(),
           position: $('#position').val(),
@@ -254,10 +278,11 @@
           //batch_no: $('#batch_no').val(),
           pack_qty_1: $('#pack_qty1').val(),
           pack_qty_2: $('#pack_qty2').val(),
-          username: $('#username').val(),
+          username: $('#txt_username').val(),
           ticket_scan_date: $('#ticket_scan_date').val(),
           position_scan_date: $('#position_scan_date').val(),
           login_date: $('#login_date').val(),
+		  putaway_type: putaway_type,
         }
       }).done(function( res ) {
 
@@ -337,9 +362,39 @@
         window.location.href = "{{ROUTE('hhd_login')}}";
       });
 
+	  $('input[name="putaway_type"]').on('click', function(){
+		$('#ticket').val('');
+		$('#position').css('background-color','gainsboro');
+		$('#position').css('border-color','gainsboro');
+		$('#position').attr('disabled', true);
+		$('#position').val('');
+		$('#position_error').html('');
+
+		$('#serial').css('background-color','gainsboro');
+		$('#serial').css('border-color','gainsboro');
+		$('#serial').attr('disabled', true);
+		$('#serial').val('');
+		$('#serial_error').html('');
+
+		$('#itemg1g2').val('');
+		$('#item_desc').val('');
+		$('#pack_code').val('');
+		$('#pack_qty1').val('');
+		$('#pack_qty2').val('');
+		$('#base_qty_1').val('');
+		$('#base_qty_2').val('');
+
+		$('#btn-save').attr('disabled',true);
+
+		$('#ticket').focus();
+	  });
+
       // TICKET
       $('#ticket').on('keyup', function(){
-
+		let pa_type = $('input[name="putaway_type"]:checked').val();
+		if (typeof pa_type === "undefined") {
+			pa_type = '';
+		}
         let ticket = $(this).val();
         if(ticket == ''){
           return false;
@@ -347,11 +402,12 @@
 
         $.ajax({
           method: "GET",
-          url: "{{route('search_ticket')}}",
+          url: "{{route('search_putaway')}}",
           data: {
             ticket: ticket,
             wh_code: $('#txt_wh_code').val(),
             location: $('#txt_location').val(),
+			pa_type: pa_type,
           }
         }).done(function( res ) {
 
@@ -431,6 +487,11 @@
 
       $('#position').on('keyup', function(){
 
+			let pa_type = $('input[name="putaway_type"]:checked').val();
+			if (typeof pa_type === "undefined") {
+				pa_type = '';
+			}
+
 		    if($(this).val() != ''){
 
 			$('#position_scan_date').val(curr_datetime());
@@ -440,54 +501,38 @@
 			}
 			$.ajax({
 			  method: "GET",
-			  url: "{{route('search_serial')}}",
+			  url: "{{route('search_putaway')}}",
 			  data: {
 				ticket: $('#ticket').val(),
-				wh_code: $('#txt_wh_code').val(),
+				/*wh_code: $('#txt_wh_code').val(),
 				location: $('#txt_location').val(),
-				serial: '',
+				serial: '',*/
 				position: $('#position').val(),
-				item_code: $('#itemg1g2').val(),
+				pa_type: pa_type,
+				/*item_code: $('#itemg1g2').val(),
 				grade_code_1: $('#grade_code_1').val(),
-				grade_code_2: $('#grade_code_2').val(),
+				grade_code_2: $('#grade_code_2').val(),*/
 			  }
 			}).done(function( res ) {
 			  //console.log(res);
 
 			  if(res['status'] == true){
 				  $('#position_error').css('display','none').html('');
-				  $('#serial').css('background-color','unset');
+
+				  if(pa_type == ''){
+					$('#serial').css('background-color','unset');
 					$('#serial').css('border-color','unset');
 					$('#serial').attr('disabled', false);
-          $('#serial').focus();
-				  //(res['cnt_serial'] > 0) ? $('#serial').focus() : $('#pack_qty1').focus();
-				  if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
-					if(res['data'].length > 0){
-					  $('#select_serial_all').css('display','revert');
-					  $('#select_serial_all').find('option').remove();
-					  $('#select_serial_all').append($('<option>', {
-						  hidden: true,
-						  text: 'Option 1'
-					  }));
-					  $.each(res['data'], function(key, value) {
-						   $('#select_serial_all').append($("<option></option>").attr("value", value).text(value));
-					  });
-					  $('#serial').attr('required','true');
-					}else{
-					  $('#serial').css('background-color','gainsboro');
-					  $('#serial').css('border-color','gainsboro');
-					  $('#serial').attr('disabled', true);
-					  $('#btn-save').attr('disabled',false);
-					  //$('#pack_qty1').focus();
-					}
-					$('#serial').val('');
+					$('#serial').focus();
 				  }else{
-					$('#select_serial_all').css('display','none');
-					$('#serial_error').css('display','none').html('');
+					$('#btn-save').attr('disabled',false);
 				  }
+
+
+
 			  }else{
 				$('#position-error-modal').modal('show');
-        $('#position').val('');
+				$('#position').val('');
 				//$('#position_error').css('display','revert').html('Position not found');
 				$('#select_serial_all').css('display','none');
 				$('#serial').val('');
@@ -510,18 +555,23 @@
         if( serial != '' ){
           $.ajax({
             method: "GET",
-            url: "{{route('search_serial')}}",
+            url: "{{route('search_putaway')}}",
             data: {
+
               serial: serial,
               position: $('#position').val(),
-              item_code: $('#itemg1g2').val(),
-              grade_code_1: $('#grade_code_1').val(),
-              grade_code_2: $('#grade_code_2').val(),
+			  ticket: $('#ticket').val(),
             }
           }).done(function( res ) {
 
-            //console.log(res);
-            if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
+            console.log(res);
+			if(res['status'] == true){
+				$('#btn-save').attr('disabled',false);
+			}else{
+				showErrorModal($('#serial'),'Invalid Serial/Batch Number');
+				$('#btn-save').attr('disabled',true);
+			}
+            /*if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
               if(res['data'].length > 0){
                 //$('#serial_error').css('display','revert').html('Serial mismatch');
                 showErrorModal($('#serial'),'Invalid Serial/Batch Number');
@@ -535,7 +585,7 @@
               $('#select_serial_all').css('display','none')
               $('#serial_error').css('display','none').html('');
 			  $('#btn-save').attr('disabled',false);
-            }
+            }*/
           });
         }
 

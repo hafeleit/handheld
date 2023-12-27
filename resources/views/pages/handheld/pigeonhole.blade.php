@@ -27,8 +27,8 @@
 					</form>
                     <form id="form_picking" action="" method="" onsubmit="return picking_submit()">
                     <div id="tab-picking" class="row" style="">
-						
-						
+
+
                         <div class="col-xl-4 col-lg-5 col-md-7 mx-lg-0">
                           <div class="card card-plain">
 							<div class="d-flex align-items-center">
@@ -37,7 +37,7 @@
 								</p>
                                 <p class="mb-0"><h3 class="text-primary" style="position: absolute;top: 14px;left: 50%;transform: translate(-50%, 0);">PIGEONHOLE</h3></p>
                                 <p class="mb-0 ms-auto">
-									<span id="btn_logout" class="mb-2 text-xs">Logout</span>
+									<a href="javascript::;" ><span id="btn_logout" class="mb-2 text-xs">Logout</span></a>
 								</p>
                             </div>
 							<div class="d-flex align-items-center">
@@ -70,12 +70,12 @@
 										<input type="text" name="itemg1g2" id="itemg1g2" class="input-sm" readonly style="background-color: gainsboro; border-color: gainsboro;">
 									</td>
                                   </tr>
-                                  
+
                                   <tr>
                                     <td class="input-sm" align="right">QTY: </td>
                                     <td>
                                       <input type="text" name="qty" id="qty" class="input-sm" readonly style="background-color: gainsboro; border-color: gainsboro;">
-                                      
+
                                     </td>
                                   </tr>
                                   <tr>
@@ -164,7 +164,7 @@
     </main>
 
     <script type="text/javascript">
-	
+
 	function hhd_home_back(){
 		$('#hhd_home_form').submit();
 	}
@@ -232,10 +232,10 @@
     $(function(){
 	  //$('#error-modal').modal('show');
 
-      
+
 
       $('#ticket').focus();
-	  
+
 	  $( "#close-error-modal" ).on( "click", function() {
         closeErrorModal($('#ticket'));
       } );
@@ -262,7 +262,7 @@
         if(ticket == ''){
           return false;
         }
-		
+
         $.ajax({
           method: "GET",
           url: "{{route('search_pgh')}}",
@@ -291,13 +291,13 @@
             return false;
 
           }else{
-			  
+
 			$('#item').val(res['data']['WHP_IN_ITEM_CODE']);
             $('#itemg1g2').val(res['data']['WHP_IN_GRADE_CODE_1']+ '/' + res['data']['WHP_IN_GRADE_CODE_2']);
             $('#qty').val(res['data']['WHP_IN_QTY']);
             $('#pgh').val(res['data']['WHP_IN_BAR_CODE']);
             $('#remaining').html(res['remaining']['REMAINING']);
-            
+
 			$('#scan_pgh').css('background-color','unset');
       		$('#scan_pgh').css('border-color','unset');
       		$('#scan_pgh').attr('disabled', false);
@@ -308,11 +308,12 @@
         });
 
       });
-	  
+
 		$('#scan_pgh').on('keyup', function(){
 			if($(this).val() == $('#pgh').val()){
 				$('#pgh_scan_date').val(curr_datetime());
 				$('#btn-save').attr('disabled',false);
+				picking_submit();
 			}else{
 				$('#btn-save').attr('disabled',true);
 				showErrorModal($('#scan_pgh'),'Scan PGH not match');

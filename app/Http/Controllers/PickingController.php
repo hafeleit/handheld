@@ -53,6 +53,70 @@ class PickingController extends Controller
 				return view('pages.handheld.pigeonhole',['txt_username' => $txt_username, 'login_date' => $login_date, 'txt_wh_code' => $txt_wh_code, 'txt_location' => $txt_location]);
 		}
 
+		public function putaway(Request $request)
+		{
+				$login_date = $request->login_date ?? '';
+				$txt_username = $request->txt_username ?? '';
+				$txt_wh_code = $request->txt_wh_code ?? '';
+				$txt_location = $request->txt_location ?? '';
+
+				return view('pages.handheld.putaway',['txt_username' => $txt_username, 'login_date' => $login_date, 'txt_wh_code' => $txt_wh_code, 'txt_location' => $txt_location]);
+		}
+
+		public function search_putaway(Request $request){
+			if($request->ticket == ''){
+				//return response()->json([ 'status' => false, 'message' => 'no data', ]);
+			}
+
+			$query = "SELECT * FROM OT_WMS_SYNC_HHD_PAWAY_IN_TEST WHERE HPC_IN_TICKET_NO = '" . $request->ticket ."'";
+
+			if($request->pa_type != ''){
+				if($request->pa_type == 'P'){
+					$query = "SELECT * FROM OT_WMS_SYNC_HHD_PAWAY_IN_TEST WHERE HPC_IN_PALLET_NO = '" . $request->ticket ."'";
+				}
+				if($request->pa_type == 'G'){
+					$query = "SELECT * FROM OT_WMS_SYNC_HHD_PAWAY_IN_TEST WHERE HPC_IN_TICKET_NO = '" . $request->ticket ."'";
+				}
+			}
+
+			if($request->position != ''){
+				$query .= " AND HPC_IN_SUGG_POSN = '".$request->position."'";
+			}
+			if($request->serial != ''){
+				$query .= " AND HPC_IN_SRNO = '".$request->serial."'";
+			}
+
+			$conn = $this->conn_orion();
+			$stid = oci_parse($conn, $query);
+			oci_execute($stid);
+			$res = oci_fetch_assoc($stid);
+
+			$base_aty_data = '';
+
+			if(isset($res['HPC_IN_ITEM_CODE'])){
+				$query_base_qty = "
+					SELECT
+						ROUND(((NVL(HPC_IN_QTY_BU, 0) / HPC_IN_BASE_UOM_LOOSE_1) / NVL(HPC_IN_BASE_UOM_CONV, 1)), 7) as BASE_QTY
+					FROM
+						OT_WMS_SYNC_HHD_PICK_IN_TEST
+					WHERE
+						hpc_in_ticket_no='".$request->ticket."'
+					AND
+						HPC_IN_ITEM_CODE='".$res['HPC_IN_ITEM_CODE']."'";
+				$stid2 = oci_parse($conn, $query_base_qty);
+				oci_execute($stid2);
+				$base_aty_data = oci_fetch_assoc($stid2);
+
+			}
+
+			if($res){
+				return response()->json([ 'status' => true, 'data' => $res, 'BASE_QTY' => $base_aty_data]);
+			}else{
+				return response()->json([ 'status' => false, 'message' => 'no data', ]);
+			}
+
+		}
+
 		public function search_ticket(Request $request){
 
 			if($request->ticket == ''){
@@ -228,6 +292,141 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
     {
         //
     }
+
+	public function save_putaway(Request $request){
+
+		$ticket = $request->ticket ?? '';
+		$ticket_scan_date = $request->ticket_scan_date ?? '';
+		$position_scan_date = $request->ticket_scan_date ?? '';
+		$putaway_scan_date = $request->pgh_scan_date ?? '';
+		$username = $request->username ?? '';
+		$login_date = $request->login_date ?? '';
+		$putaway_type = $request->putaway_type ?? '';
+
+		$hpc_in_flex_20 = 'hpc_in_flex_20';
+		$where = 'HPC_IN_TICKET_NO';
+
+		if($putaway_type != ''){
+			$hpc_in_flex_20 = "'".$putaway_type."'";
+
+			if($putaway_type == 'P'){
+				$where = 'HPC_IN_PALLET_NO';
+			}
+			if($putaway_type == 'G'){
+				$where = 'HPC_IN_FLEX_01';
+
+				$query_g = "SELECT HPC_IN_FLEX_01 FROM OT_WMS_SYNC_HHD_PAWAY_IN_TEST WHERE HPC_IN_TICKET_NO = '" . $ticket . "'";
+				$conn = $this->conn_orion();
+				$stid = oci_parse($conn, $query_g);
+				oci_execute($stid);
+				$group_id = oci_fetch_assoc($stid);
+				$ticket = $group_id['HPC_IN_FLEX_01'];
+			}
+		}
+		$query = "
+		INSERT INTO OT_WMS_SYNC_HHD_PAWAY_OUT_TEST
+			SELECT
+				hpc_in_comp_code,
+				hpc_in_wh_code,
+				hpc_in_locn_code,
+				hpc_in_rcv_dt,
+				hpc_in_rcv_id,
+				hpc_in_posn_rcv_seq_no,
+				hpc_in_sugg_posn,
+				hpc_in_pallet_no,
+				hpc_in_item_code,
+				'9',
+				hpc_in_grade_code_1,
+				hpc_in_grade_code_2,
+				hpc_in_pack_code,
+				hpc_in_uom_code,
+				hpc_in_qty,
+				hpc_in_qty_ls,
+				hpc_in_qty_bu,
+				hpc_in_batch_no,
+				hpc_in_srno,
+				hpc_in_work_order_id,
+				hpc_in_work_order_dt,
+				hpc_in_ticket_no,
+				hpc_in_assigned_user,
+				hpc_in_wwod_sys_id,
+				hpc_in_sugg_sys_id,
+				hpc_in_ref_opr_type,
+				hpc_in_flex_01,
+				hpc_in_flex_02,
+				hpc_in_flex_03,
+				hpc_in_flex_04,
+				hpc_in_flex_05,
+				hpc_in_flex_06,
+				hpc_in_flex_07,
+				hpc_in_flex_08,
+				hpc_in_flex_09,
+				hpc_in_flex_10,
+				hpc_in_flex_11,
+				hpc_in_flex_12,
+				hpc_in_flex_13,
+				hpc_in_flex_14,
+				hpc_in_flex_15,
+				hpc_in_flex_16,
+				hpc_in_flex_17,
+				hpc_in_flex_18,
+				hpc_in_flex_19,
+				$hpc_in_flex_20,
+				hpc_in_sugg_posn_no,
+				hpc_in_base_uom,
+				hpc_in_base_max_ls,
+				hpc_in_base_qty,
+				hpc_in_base_qty_ls,
+				hpc_in_base_qty_bu,
+				hpc_in_out_flag,
+				hpc_in_dflt_pack_code,
+				hpc_dflt_qty,
+				hpc_dflt_qty_ls,
+				hpc_dflt_qty_bu,
+				hpc_in_dflt_conv_fact,
+				hpc_in_base_uom_conv,
+				hpc_in_stk_uom_conv,
+				hpc_in_stk_uom_loose,
+				hpc_in_stk_uom_loose_1,
+				hpc_in_base_uom_loose,
+				hpc_in_base_uom_loose_1,
+				hpc_in_sugg_posn,
+				hpc_in_pack_code,
+				hpc_in_qty,
+				hpc_in_qty_ls,
+				hpc_in_qty_bu,
+				'".$username."' as hpc_out_act_user_id,
+				TO_DATE('".$putaway_scan_date."', 'DD/MM/YYYY HH24:MI:SS') as hpc_out_act_putaway_conf_dt,
+				TO_DATE('".$putaway_scan_date."', 'DD/MM/YYYY HH24:MI:SS') as hpc_out_act_sync_dt,
+				'orionadmin' as hpc_out_device_id,
+				'hthbkkapp113' as hpc_out_device_name,
+				'',
+				TO_DATE('".$ticket_scan_date."', 'DD/MM/YYYY HH24:MI:SS') as hpc_out_ticket_scan_dt,
+				TO_DATE('".$position_scan_date."', 'DD/MM/YYYY HH24:MI:SS') as hpc_out_posn_scan_dt,
+				'".$username."' as hpc_out_cr_uid,
+				TO_DATE('".$login_date."', 'DD/MM/YYYY HH24:MI:SS') as hpc_out_cr_dt
+			FROM
+				OT_WMS_SYNC_HHD_PAWAY_IN_TEST
+			WHERE
+				$where = '".$ticket."'
+		";
+
+		$conn = $this->conn_orion();
+		$stid = oci_parse($conn, $query);
+		$exc = oci_execute($stid);
+
+		if($exc){
+			return response()->json([
+				'status' => true,
+				'message' => 'insert Successfuly',
+			]);
+		}else{
+			return response()->json([
+				'status' => false,
+				'message' => 'insert error'
+			]);
+		}
+	}
 
 	public function save_pgh(Request $request){
 

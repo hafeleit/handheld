@@ -16,16 +16,16 @@
   }
 </style>
 <div class="container">
-    
+
     <div class="row" id="icon_box">
         <div class="col-xl-4" style="position: relative;">
             <div class="row">
-				
+
 					<div class="d-flex align-items-center" style="padding-bottom: 50px;">
-						
+
 						<p class="mb-0"><h3 class="text-primary" style="position: absolute;top: 14px;left: 50%;transform: translate(-50%, 0);">HOME</h3></p>
 						<p class="mb-0 ms-auto">
-							<span id="btn_logout" class="mb-2 text-xs">Logout</span>
+							<a href="javascript::;" ><span id="btn_logout" class="mb-2 text-xs">Logout</span></a>
 						</p>
 					</div>
 				  <form id="select_module_form" action="" method="post" >
@@ -35,27 +35,36 @@
 					<input type="hidden" name="txt_wh_code" id="txt_wh_code" value="{{$txt_wh_code}}" />
 					<input type="hidden" name="txt_location" id="txt_location" value="{{$txt_location}}" />
 				  </form>
-                  <div class="col-auto" onclick="picking_submit('picking')">
+                  <div class="col-4" style="text-align:center" onclick="picking_submit('picking')">
                     <a href="javascript::;">
                       <div class="avatar avatar-xl position-relative">
-                        <img src="/img/picking.png" alt="profile_image" class="w-100 border-radius-lg shadow-sm" style="padding: 2px;">
+                        <img src="/img/picking.png" alt="profile_image" class="w-100 border-radius-lg shadow-sm" style="padding: 10px;">
                       </div>
-                      <div class="text-uppercase text-center text-sm">
+                      <div class="text-uppercase text-center text-xs">
                         Picking
                       </div>
                     </a>
                   </div>
-                  <div class="col-auto" style="text-align:center" onclick="picking_submit('pigeonhole')">
+				  <div class="col-4" style="text-align:center" onclick="picking_submit('pigeonhole')">
                     <a href="javascript::;">
                       <div class="avatar avatar-xl position-relative">
-                        <img src="/img/pgh.png" alt="profile_image" class="w-100 border-radius-lg shadow-sm" style="padding: 2px;">
+                        <img src="/img/pgh.png" alt="profile_image" class="w-100 border-radius-lg shadow-sm" style="padding: 10px;">
                       </div>
-                      <div class="text-uppercase text-center text-sm">
-                        pigeonhole
+                      <div class="text-uppercase text-center text-xs">
+                        PigeonHole
                       </div>
-                    
+                    </a>
                   </div>
-				
+                  <div class="col-4" style="text-align:center" onclick="picking_submit('putaway')">
+                    <a href="javascript::;">
+                      <div class="avatar avatar-xl position-relative">
+                        <img src="/img/putaway.png" alt="profile_image" class="w-100 border-radius-lg shadow-sm" style="padding: 10px;">
+                      </div>
+                      <div class="text-uppercase text-center text-xs">
+                        Put Away
+                      </div>
+                  </div>
+
             </div>
         </div>
     </div>
@@ -87,9 +96,9 @@
         window.location.href = "{{ROUTE('hhd_login')}}";
       });
     });
-	
+
 	function picking_submit(act){
-		
+
 		let url = "";
 		if(act == 'picking'){
 			url = '{{ ROUTE("picking") }}';
@@ -97,8 +106,11 @@
 		if(act == 'pigeonhole'){
 			url = '{{ ROUTE("pigeonhole") }}';
 		}
+		if(act == 'putaway'){
+			url = '{{ ROUTE("putaway") }}';
+		}
 		$('#select_module_form').attr('action', url).submit();
-		
+
 	}
 
     function login_submit(){
