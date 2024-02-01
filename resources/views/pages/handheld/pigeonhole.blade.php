@@ -27,26 +27,29 @@
 					</form>
                     <form id="form_picking" action="" method="" onsubmit="return picking_submit()">
                     <div id="tab-picking" class="row" style="">
-
-
+						
+						
                         <div class="col-xl-4 col-lg-5 col-md-7 mx-lg-0">
                           <div class="card card-plain">
-							<div class="d-flex align-items-center">
-                                <p class="mb-0">
-									<a href="javascript::;" onclick="hhd_home_back()" ><span class="mb-2 text-xs">Home</span></a>
+						  
+							<div class="d-flex align-items-center ps-2 ">
+                                <div class="icon icon-sm" onclick="hhd_home_back()">
+									<img src="/img/house-icon.png" alt="profile_image" class="w-80 pt-1">
+								</div>
+                                <h3 class="text-primary" style="position: absolute;top: 5px;left: 50%;transform: translate(-50%, 0);">PIGEONHOLE</h3>
+                                <p class="ms-auto">
+									<div class="icon icon-sm text-end" onclick="hhd_home_back()">
+										<img src="/img/logout-icon.png" alt="profile_image" class="w-50">
+									</div>
+									<a id="btn_logout" class="text-secondary text-xs" href="javascript::;" style="margin-right: -15px;">Logout</a>
 								</p>
-                                <p class="mb-0"><h3 class="text-primary" style="position: absolute;top: 14px;left: 50%;transform: translate(-50%, 0);">PIGEONHOLE</h3></p>
-                                <p class="mb-0 ms-auto">
-									<a href="javascript::;" ><span id="btn_logout" class="mb-2 text-xs">Logout</span></a>
-								</p>
+								
                             </div>
-							<div class="d-flex align-items-center">
-                                <p class="mb-0 ms-auto">
-									<span class="mb-2 text-xs">{{$txt_username}}</span>
-								</p>
-                            </div>
-                <label id="txt_username" style="position: absolute;text-align: right;width: 85%;"></label>
-                              <div class="card-body">
+							<span class="text-xs" style="margin-left: -11px; margin-top: -4px;">
+								<i class="ni ni-single-02 text-secondary text-xs"> {{$txt_username}}</i>
+							</span>
+							
+                              <div class="card-body p-0 mt-3">
                                 <table>
                                   <tr>
                                     <td class="input-sm" align="right">Ticket:</td>
@@ -70,12 +73,12 @@
 										<input type="text" name="itemg1g2" id="itemg1g2" class="input-sm" readonly style="background-color: gainsboro; border-color: gainsboro;">
 									</td>
                                   </tr>
-
+                                  
                                   <tr>
                                     <td class="input-sm" align="right">QTY: </td>
                                     <td>
                                       <input type="text" name="qty" id="qty" class="input-sm" readonly style="background-color: gainsboro; border-color: gainsboro;">
-
+                                      
                                     </td>
                                   </tr>
                                   <tr>
@@ -164,7 +167,7 @@
     </main>
 
     <script type="text/javascript">
-
+	
 	function hhd_home_back(){
 		$('#hhd_home_form').submit();
 	}
@@ -232,10 +235,10 @@
     $(function(){
 	  //$('#error-modal').modal('show');
 
-
+      
 
       $('#ticket').focus();
-
+	  
 	  $( "#close-error-modal" ).on( "click", function() {
         closeErrorModal($('#ticket'));
       } );
@@ -262,7 +265,7 @@
         if(ticket == ''){
           return false;
         }
-
+		
         $.ajax({
           method: "GET",
           url: "{{route('search_pgh')}}",
@@ -291,13 +294,13 @@
             return false;
 
           }else{
-
+			  
 			$('#item').val(res['data']['WHP_IN_ITEM_CODE']);
             $('#itemg1g2').val(res['data']['WHP_IN_GRADE_CODE_1']+ '/' + res['data']['WHP_IN_GRADE_CODE_2']);
             $('#qty').val(res['data']['WHP_IN_QTY']);
             $('#pgh').val(res['data']['WHP_IN_BAR_CODE']);
             $('#remaining').html(res['remaining']['REMAINING']);
-
+            
 			$('#scan_pgh').css('background-color','unset');
       		$('#scan_pgh').css('border-color','unset');
       		$('#scan_pgh').attr('disabled', false);
@@ -308,7 +311,7 @@
         });
 
       });
-
+	  
 		$('#scan_pgh').on('keyup', function(){
 			if($(this).val() == $('#pgh').val()){
 				$('#pgh_scan_date').val(curr_datetime());

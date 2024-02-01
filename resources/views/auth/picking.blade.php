@@ -18,36 +18,82 @@
     <main class="main-content  mt-0">
         <section>
                 <div class="container">
-					<form id="hhd_home_form" action="{{ ROUTE('hhd_home') }}" method="post">
-						{{ csrf_field() }}
-						<input type="hidden" name="login_date" id="login_date" value="{{$login_date}}">
-						<input type="hidden" name="txt_wh_code" id="txt_wh_code" value="{{$txt_wh_code}}">
-						<input type="hidden" name="txt_location" id="txt_location" value="{{$txt_location}}">
-						<input type="hidden" name="txt_username" id="txt_username" value="{{$txt_username}}">
-					</form>
-                    <form id="form_picking" action="" method="" onsubmit="return picking_submit()">
-                    <div id="tab-picking" class="row" style="">
-						
-						
-                        <div class="col-xl-4 col-lg-5 col-md-7 mx-lg-0">
-                          <div class="card card-plain">
-							<div class="d-flex align-items-center ps-2 ">
-                                <div class="icon icon-sm" onclick="hhd_home_back()">
-									<img src="/img/house-icon.png" alt="profile_image" class="w-80 pt-1">
-								</div>
-                                <h3 class="text-primary" style="position: absolute;top: 5px;left: 50%;transform: translate(-50%, 0);">PICKING</h3>
-                                <p class="ms-auto">
-									<div class="icon icon-sm text-end" onclick="hhd_home_back()">
-										<img src="/img/logout-icon.png" alt="profile_image" class="w-50">
-									</div>
-									<a id="btn_logout" class="text-secondary text-xs" href="javascript::;" style="margin-right: -15px;">Logout</a>
-								</p>
-								
+
+                    <div class="row">
+                        <div id="tab-login" class="col-xl-5 col-lg-5 col-md-7 mx-lg-0" style="">
+                            <div class="card card-plain">
+                                <div class="card-header pb-0 text-start">
+                                    <h5 class="font-weight-bolder">LOGIN</h5>
+                                </div>
+                                <div class="card-body">
+                                  <form id="login_form" onsubmit="return login_submit()">
+                                  <table>
+                                    <tr>
+                                      <td class="input-sm" align="right">Username:</td>
+                                      <td>
+                                        <input type="text" name="username" id="username" class="input-sm"  value="{{ $data['HPC_IN_COMP_CODE'] ?? '' }}">
+                                        <p id="username_error" class="input-sm error" style="display:none">error</p>
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td class="input-sm" align="right">Password:</td>
+                                      <td><input type="password" name="password" class="input-sm" ></td>
+                                    </tr>
+                                    <tr>
+                                      <td class="input-sm" align="right">WH Code:</td>
+                                      <td>
+										<input type="text" name="wh_code" id="wh_code" class="input-sm" >
+										<p id="wh_code_error" class="input-sm error" style="display:none">error</p>
+									  </td>
+
+                                    </tr>
+                                    <tr>
+                                      <td class="input-sm" align="right">Location:</td>
+                                      <td>
+										<input type="text" name="location" id="location" class="input-sm" >
+										<p id="location_error" class="input-sm error" style="display:none">error</p>
+									  </td>
+
+                                    </tr>
+                                  </table>
+
+                                  <div class="text-center">
+                                      <button id="btn-next" type="submit" class="btn btn-sm btn-primary btn-sm w-50 mt-4 mb-0">Login</button>
+                                  </div>
+                                  </form>
+                                </div>
                             </div>
-							<span class="text-xs" style="margin-left: -11px; margin-top: -4px;">
-								<i class="ni ni-single-02 text-secondary text-xs"> {{$txt_username}}</i>
-							</span>
-                              <div class="card-body p-0 mt-3">
+                        </div>
+                    </div>
+                    <form id="form_picking" action="" method="" onsubmit="return picking_submit()">
+                    <div id="tab-picking" class="row" style="display: none;">
+                        <div class="col-xl-4 col-lg-5 col-md-7 mx-lg-0">
+						  <?php /*<div class="nav-wrapper position-relative end-0">
+                              <ul class="nav nav-pills nav-fill p-1" role="tablist">
+                                  <li class="nav-item">
+                                      <a class="nav-link mb-0 px-0 py-1 active d-flex align-items-center justify-content-center "
+                                          data-bs-toggle="tab" href="javascript:;" role="tab" aria-selected="true">
+                                          <span class="ms-2">PICKING</span>
+                                      </a>
+                                  </li>
+                                  <li class="nav-item">
+                                      <a class="nav-link mb-0 px-0 py-1 d-flex align-items-center justify-content-center "
+                                          data-bs-toggle="tab" href="javascript:;" role="tab" aria-selected="false">
+                                          <span class="ms-2">SYNC</span>
+                                      </a>
+                                  </li>
+                                  <li class="nav-item">
+                                      <a class="nav-link mb-0 px-0 py-1 d-flex align-items-center justify-content-center "
+                                          data-bs-toggle="tab" href="javascript:;" role="tab" aria-selected="false">
+                                          <span class="ms-2">POWER</span>
+                                      </a>
+                                  </li>
+                              </ul>
+                          </div> <?php */ ?>
+                          <div class="card card-plain">
+							  <label id="btn_logout" style="text-align: right;">Logout</label>
+							  <label id="txt_username" >HTH</label>
+                              <div class="card-body">
                                 <table>
                                   <tr>
                                     <td class="input-sm" align="right">Ticket:</td>
@@ -109,7 +155,7 @@
                                     <td>
                                       <input type="text" name="base_qty_1" id="base_qty_1" class="input-sm" size="5" readonly style="background-color: gainsboro; border-color: gainsboro;">
                                       <input type="text" name="base_qty_2" id="base_qty_2" class="input-sm" size="5" readonly style="background-color: gainsboro; border-color: gainsboro;">
-                                      
+                                      <input type="hidden" name="login_date" id="login_date">
                                     </td>
                                   </tr>
                                 </table>
@@ -180,10 +226,6 @@
     </main>
 
     <script type="text/javascript">
-	
-	function hhd_home_back(){
-		$('#hhd_home_form').submit();
-	}
 
     function chk_wh_locn(wh, locn){
 
@@ -228,7 +270,7 @@
         $('#tab-login').css('display','none');
         $('#tab-picking').css('display','');
         $('.moving-tab').css('width','35%');
-        $('#txt_username').html('( '+$('#username').val()+' ) | ');
+        $('#txt_username').html($('#username').val());
         $('#ticket').focus();
       }else{
         //$('#error-modal').modal('show');
@@ -321,7 +363,7 @@
         closeErrorModal($('#ticket'));
       } );
 
-      $('#ticket').focus();
+      $('#username').focus();
 
       $('#close-modal').on('click', function(){
         $('#success-modal').modal('hide');
@@ -335,7 +377,14 @@
       //LOGOUT
       $('#btn_logout').on('click', function(){
 
-        window.location.href = "{{ROUTE('hhd_login')}}";
+        $('#form_picking')[0].reset();
+        $('#login_form')[0].reset();
+        $('.error').html('');
+    		$('#select_serial_all').find('option').remove();
+    		$('#select_serial_all').css('display','none');
+        $('#tab-login').css('display','revert');
+        $('#tab-picking').css('display','none');
+        $('#username').focus();
       });
 
       // TICKET
@@ -345,14 +394,13 @@
         if(ticket == ''){
           return false;
         }
-		
         $.ajax({
           method: "GET",
           url: "{{route('search_ticket')}}",
           data: {
             ticket: ticket,
-            wh_code: $('#txt_wh_code').val(),
-            location: $('#txt_location').val(),
+            wh_code: $('#wh_code').val(),
+            location: $('#location').val(),
           }
         }).done(function( res ) {
 
@@ -444,8 +492,8 @@
 			  url: "{{route('search_serial')}}",
 			  data: {
 				ticket: $('#ticket').val(),
-				wh_code: $('#txt_wh_code').val(),
-				location: $('#txt_location').val(),
+				wh_code: $('#wh_code').val(),
+				location: $('#location').val(),
 				serial: '',
 				position: $('#position').val(),
 				item_code: $('#itemg1g2').val(),

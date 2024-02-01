@@ -20,14 +20,23 @@
     <div class="row" id="icon_box">
         <div class="col-xl-4" style="position: relative;">
             <div class="row">
-
-					<div class="d-flex align-items-center" style="padding-bottom: 50px;">
-
-						<p class="mb-0"><h3 class="text-primary" style="position: absolute;top: 14px;left: 50%;transform: translate(-50%, 0);">HOME</h3></p>
-						<p class="mb-0 ms-auto">
-							<a href="javascript::;" ><span id="btn_logout" class="mb-2 text-xs">Logout</span></a>
-						</p>
-					</div>
+					<div class="d-flex align-items-center mb-4">
+						<!--<i class="ni ni-single-02 text-secondary opacity-10 text-xs"> {{$txt_username}}</i>-->
+                                
+                                <h3 class="text-primary" style="position: absolute;top: 5px;left: 50%;transform: translate(-50%, 0);">
+									
+									HOME
+								</h3>
+                                <p class="ms-auto">
+									<div class="icon icon-sm text-end" onclick="hhd_home_back()">
+										<img src="/img/logout-icon.png" alt="profile_image" class="w-50">
+									</div>
+									<a id="btn_logout" class="text-secondary text-xs" href="javascript::;" style="margin-right: -15px;">Logout</a>
+								</p>
+								
+                            </div>
+							
+					
 				  <form id="select_module_form" action="" method="post" >
 					{{ csrf_field() }}
 					<input type="hidden" name="login_date" id="login_date" value="{{$login_date}}" />
@@ -48,7 +57,7 @@
 				  <div class="col-4" style="text-align:center" onclick="picking_submit('pigeonhole')">
                     <a href="javascript::;">
                       <div class="avatar avatar-xl position-relative">
-                        <img src="/img/pgh.png" alt="profile_image" class="w-100 border-radius-lg shadow-sm" style="padding: 10px;">
+                        <img src="/img/pigronhole.png" alt="profile_image" class="w-100 border-radius-lg shadow-sm">
                       </div>
                       <div class="text-uppercase text-center text-xs">
                         PigeonHole
@@ -61,10 +70,18 @@
                         <img src="/img/putaway.png" alt="profile_image" class="w-100 border-radius-lg shadow-sm" style="padding: 10px;">
                       </div>
                       <div class="text-uppercase text-center text-xs">
-                        Put Away
+                        PutAway
                       </div>
                   </div>
-
+                  <div class="col-4 mt-3" style="text-align:center" onclick="picking_submit('receiving')">
+                    <a href="javascript::;">
+                      <div class="avatar avatar-xl position-relative">
+                        <img src="/img/receiving.png" alt="profile_image" class="w-100 border-radius-lg shadow-sm" style="padding: 10px;">
+                      </div>
+                      <div class="text-uppercase text-center text-xs">
+                        Receiving
+                      </div>
+                  </div>
             </div>
         </div>
     </div>
@@ -108,6 +125,9 @@
 		}
 		if(act == 'putaway'){
 			url = '{{ ROUTE("putaway") }}';
+		}
+    if(act == 'receiving'){
+			url = '{{ ROUTE("receiving") }}';
 		}
 		$('#select_module_form').attr('action', url).submit();
 

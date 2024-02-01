@@ -17,16 +17,16 @@
 </style>
 <div class="container">
     <div class="row">
-
+        
         <div id="tab-login" class="col-xl-5 col-lg-5 col-md-7 mx-lg-0" style="">
             <div class="card card-plain">
 
                 <div class="d-flex align-items-center" style="padding-bottom: 50px;">
-
+						
 					<p class="mb-0"><h3 class="text-primary" style="position: absolute;top: 14px;left: 50%;transform: translate(-50%, 0);">LOGIN</h3></p>
-
+						
 				</div>
-
+				
                 <div class="card-body">
                   <form id="login_form" action="{{ROUTE('hhd_home')}}" method="post" onsubmit="return login_submit()">
 				  {{ csrf_field() }}
@@ -94,9 +94,9 @@
         closeErrorModal($('#ticket'));
       } );
     });
-
+	
 	function picking_submit(act){
-
+		
 		let url = "";
 		if(act == 'picking'){
 			url = '{{ ROUTE("picking") }}';
@@ -105,7 +105,7 @@
 			url = '{{ ROUTE("pigeonhole") }}';
 		}
 		$('#select_module_form').attr('action', url).submit();
-
+		
 	}
 
     function login_submit(){
@@ -130,7 +130,7 @@
         let check_wh = chk_wh_locn($('#txt_wh_code').val(), $('#txt_location').val());
         if(check_wh){
           $('#login_date').val(curr_datetime());
-
+		  
 		  return true;
         }else{
           //$('#error-modal').modal('show');

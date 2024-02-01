@@ -27,26 +27,27 @@
 					</form>
                     <form id="form_picking" action="" method="" onsubmit="return putaway_submit()">
                     <div id="tab-picking" class="row" style="">
-
-
+						
+						
                         <div class="col-xl-4 col-lg-5 col-md-7 mx-lg-0">
                           <div class="card card-plain">
-							<div class="d-flex align-items-center">
-                                <p class="mb-0">
-									<a href="javascript::;" onclick="hhd_home_back()" ><span class="mb-2 text-xs">Home</span></a>
+							<div class="d-flex align-items-center ps-2 ">
+                                <div class="icon icon-sm" onclick="hhd_home_back()">
+									<img src="/img/house-icon.png" alt="profile_image" class="w-80 pt-1">
+								</div>
+                                <h3 class="text-primary" style="position: absolute;top: 5px;left: 50%;transform: translate(-50%, 0);">PUT AWAY</h3>
+                                <p class="ms-auto">
+									<div class="icon icon-sm text-end" onclick="hhd_home_back()">
+										<img src="/img/logout-icon.png" alt="profile_image" class="w-50">
+									</div>
+									<a id="btn_logout" class="text-secondary text-xs" href="javascript::;" style="margin-right: -15px;">Logout</a>
 								</p>
-                                <p class="mb-0"><h3 class="text-primary" style="position: absolute;top: 14px;left: 50%;transform: translate(-50%, 0);">PUT AWAY</h3></p>
-                                <p class="mb-0 ms-auto">
-									<a href="javascript::;" ><span id="btn_logout" class="mb-2 text-xs">Logout</span></a>
-								</p>
+								
                             </div>
-							<div class="d-flex align-items-center">
-                                <p class="mb-0 ms-auto">
-									<span class="mb-2 text-xs">{{$txt_username}}</span>
-								</p>
-                            </div>
-                <label id="txt_username" style="position: absolute;text-align: right;width: 85%;"></label>
-                              <div class="card-body">
+							<span class="text-xs" style="margin-left: -11px; margin-top: -4px;">
+								<i class="ni ni-single-02 text-secondary text-xs"> {{$txt_username}}</i>
+							</span>
+                              <div class="card-body p-0 mt-3">
 								  <div class="row">
 									<div class="col-6">
 										<div class="custom-control custom-checkbox text-end">
@@ -62,8 +63,8 @@
 									</div>
 								  </div>
 								<script>
-									$(document).on('click', 'input[type="checkbox"]', function() {
-										$('input[type="checkbox"]').not(this).prop('checked', false);
+									$(document).on('click', 'input[type="checkbox"]', function() {      
+										$('input[type="checkbox"]').not(this).prop('checked', false);      
 									});
 								</script>
                                 <table>
@@ -127,7 +128,7 @@
                                     <td>
                                       <input type="text" name="base_qty_1" id="base_qty_1" class="input-sm" size="5" readonly style="background-color: gainsboro; border-color: gainsboro;">
                                       <input type="text" name="base_qty_2" id="base_qty_2" class="input-sm" size="5" readonly style="background-color: gainsboro; border-color: gainsboro;">
-
+                                      
                                     </td>
                                   </tr>
                                 </table>
@@ -198,7 +199,7 @@
     </main>
 
     <script type="text/javascript">
-
+	
 	function hhd_home_back(){
 		$('#hhd_home_form').submit();
 	}
@@ -261,7 +262,7 @@
     }
 
     function putaway_submit(){
-
+		
 		let putaway_type = $('input[name="putaway_type"]:checked').val();
 		if (typeof putaway_type === "undefined") {
 			putaway_type = '';
@@ -361,7 +362,7 @@
 
         window.location.href = "{{ROUTE('hhd_login')}}";
       });
-
+	  
 	  $('input[name="putaway_type"]').on('click', function(){
 		$('#ticket').val('');
 		$('#position').css('background-color','gainsboro');
@@ -375,7 +376,7 @@
 		$('#serial').attr('disabled', true);
 		$('#serial').val('');
 		$('#serial_error').html('');
-
+		
 		$('#itemg1g2').val('');
 		$('#item_desc').val('');
 		$('#pack_code').val('');
@@ -385,7 +386,7 @@
 		$('#base_qty_2').val('');
 
 		$('#btn-save').attr('disabled',true);
-
+		
 		$('#ticket').focus();
 	  });
 
@@ -399,7 +400,7 @@
         if(ticket == ''){
           return false;
         }
-
+		
         $.ajax({
           method: "GET",
           url: "{{route('search_putaway')}}",
@@ -486,7 +487,7 @@
       });
 
       $('#position').on('keyup', function(){
-
+		  
 			let pa_type = $('input[name="putaway_type"]:checked').val();
 			if (typeof pa_type === "undefined") {
 				pa_type = '';
@@ -518,7 +519,7 @@
 
 			  if(res['status'] == true){
 				  $('#position_error').css('display','none').html('');
-
+				  
 				  if(pa_type == ''){
 					$('#serial').css('background-color','unset');
 					$('#serial').css('border-color','unset');
@@ -527,9 +528,9 @@
 				  }else{
 					$('#btn-save').attr('disabled',false);
 				  }
-
-
-
+				  
+				  
+				  
 			  }else{
 				$('#position-error-modal').modal('show');
 				$('#position').val('');
@@ -557,7 +558,7 @@
             method: "GET",
             url: "{{route('search_putaway')}}",
             data: {
-
+				
               serial: serial,
               position: $('#position').val(),
 			  ticket: $('#ticket').val(),

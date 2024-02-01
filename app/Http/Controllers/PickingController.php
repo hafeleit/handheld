@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\TempReceiving;
 
 class PickingController extends Controller
 {
@@ -63,9 +64,64 @@ class PickingController extends Controller
 				return view('pages.handheld.putaway',['txt_username' => $txt_username, 'login_date' => $login_date, 'txt_wh_code' => $txt_wh_code, 'txt_location' => $txt_location]);
 		}
 
+		public function receiving(Request $request)
+		{
+				$login_date = $request->login_date ?? '';
+				$txt_username = $request->txt_username ?? '';
+				$txt_wh_code = $request->txt_wh_code ?? '';
+				$txt_location = $request->txt_location ?? '';
+
+				return view('pages.handheld.receiving',['txt_username' => $txt_username, 'login_date' => $login_date, 'txt_wh_code' => $txt_wh_code, 'txt_location' => $txt_location]);
+		}
+
+		public function temp_receiving(Request $request){
+
+			if($request->sys_id != '' && $request->serial_number != ''){
+
+				$temp = TempReceiving::where('sys_id', $request->sys_id)->where('serial_number', $request->serial_number);
+				$cnt_temp = $temp->count();
+				$user_id_temp = $temp->first();
+				$q_cnt_serial = "SELECT Count(*) AS cnt_out FROM OT_GR_HHD_OUT_ITEM_SRNO_TEST WHERE  ghi_out_gi_sys_id = '".$request->sys_id."' AND ghi_out_sr_no = '".$request->serial_number."'";
+				//$q_cnt_serial = "SELECT Count(*) AS cnt_out FROM OT_GR_HHD_OUT_ITEM_SRNO_TEST WHERE  ghi_out_gi_sys_id = '147306438' AND ghi_out_sr_no = '1'";
+				$conn = $this->conn_orion();
+				$stid = oci_parse($conn, $q_cnt_serial);
+				oci_execute($stid);
+				$res = oci_fetch_assoc($stid);
+				$cnt_out = $res['CNT_OUT'];
+				$error_msg = '';
+				//dd($cnt_out,$cnt_temp);
+
+				if((int)$cnt_temp == 0 && (int)$cnt_out == 0){
+					TempReceiving::create([
+						'sys_id' => $request->sys_id,
+						'serial_number' => $request->serial_number,
+						'user_id' => $request->user_id,
+					]);
+					return response()->json([
+						'status' => true,
+						'msg' => 'insert success',
+					]);
+				}
+
+				$error_msg .= ((int)$cnt_temp > 0) ? 'SN ['.$request->serial_number.'] already scan by user '.$user_id_temp->user_id : '';
+				$error_msg .= ((int)$cnt_out > 0) ? 'Existing in database' : '';
+
+				return response()->json([
+					'status' => false,
+					'msg' => $error_msg,
+				]);
+
+			}
+			return response()->json([
+				'status' => false,
+				'msg' => 'Not found data',
+			]);
+
+		}
+
 		public function search_putaway(Request $request){
 			if($request->ticket == ''){
-				//return response()->json([ 'status' => false, 'message' => 'no data', ]);
+				return response()->json([ 'status' => false, 'message' => 'no data', ]);
 			}
 
 			$query = "SELECT * FROM OT_WMS_SYNC_HHD_PAWAY_IN_TEST WHERE HPC_IN_TICKET_NO = '" . $request->ticket ."'";
@@ -285,6 +341,94 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 
 		}
 
+		public function search_receiving(Request $request){
+
+			$query = "SELECT * FROM OT_GR_HHD_IN_ITEM_SRNO_TEST WHERE ghi_in_ship_id = '".$request->ship_id."'";
+			if($request->sys_id != ''){
+				$query = "SELECT * FROM OT_GR_HHD_IN_ITEM_SRNO_TEST WHERE GHI_IN_GI_SYS_ID = '".$request->sys_id."'";
+			}
+			if($request->txn_code != '' && $request->doc_no != ''){
+				$query = "SELECT * FROM OT_GR_HHD_IN_ITEM_SRNO_TEST WHERE GHI_IN_TXN_CODE = '".$request->txn_code."' AND GHI_IN_DOC_NO = '".$request->doc_no."'" ;
+			}
+
+			$q_get_pallet = "SELECT Max(ghi_out_pallet_no) AS ghi_out_pallet_no FROM OT_GR_HHD_OUT_ITEM_SRNO_TEST";
+			$conn = $this->conn_orion();
+			$stid = oci_parse($conn, $query);
+			$stid2 = oci_parse($conn, $query);
+			$stid3 = oci_parse($conn, $q_get_pallet);
+			oci_execute($stid);
+			oci_execute($stid2);
+			oci_execute($stid3);
+			$res = oci_fetch_assoc($stid);
+			$pallet_no = oci_fetch_assoc($stid3);
+			$total_serial = 0;
+			$cnt_ship = 0;
+			$cnt_temp = 0;
+			$serial_temp = [];
+			if($res){
+
+				$q_cnt_ship = "SELECT Count(*) AS cnt_ship FROM OT_GR_HHD_OUT_ITEM_SRNO_TEST WHERE ghi_out_gi_sys_id = '".$res['GHI_IN_GI_SYS_ID']."'";
+				$stid4 = oci_parse($conn, $q_cnt_ship);
+				oci_execute($stid4);
+				$cnt_ship = oci_fetch_assoc($stid4);
+				$cnt_ship = $cnt_ship['CNT_SHIP'];
+				$total_serial = $res['GHI_IN_QTY_BU'] - $cnt_ship;
+
+				$temp = TempReceiving::where('sys_id', $res['GHI_IN_GI_SYS_ID'])->where('user_id', $request->user_id);
+				$cnt_temp = $temp->count();
+				$q_temp = $temp->get();
+				foreach ($q_temp as $key => $value) {
+					$serial_temp[] = $value->serial_number;
+				}
+			}
+
+			$pallet_no = $pallet_no['GHI_OUT_PALLET_NO'] ?? date('y').'00000000000';
+			//$pallet_no = $pallet_no['GHI_OUT_PALLET_NO'] ?? '2400000000009';
+			$pallet_year = substr($pallet_no,0,-11);
+			$pallet_number = substr($pallet_no, -11);
+
+			if($pallet_year != date('y')){
+				$pallet_no = date('y').'00000000001';
+			}else{
+				$pallet_no = $pallet_year.str_pad($pallet_number+1,11,'0',STR_PAD_LEFT);
+			}
+
+			if(!$res){
+				return response()->json([
+					'status' => false,
+					'msg' => 'query error.',
+				]);
+
+			}
+			$items = [];
+			$TXN_CODE = [];
+			$DOC_NO = [];
+			while (($row = oci_fetch_row($stid2)) != false) {
+				//echo $row[0] . " " . $row[1] . "<br>\n";
+				$items[] = $row[7];
+				$TXN_CODE[] = $row[4];
+				$DOC_NO[] = $row[5];
+				$SYS_ID[] = $row[0];
+			}
+			$items_count = count($items);
+
+			return response()->json([
+				'status' => true,
+				'data' => $res,
+				'items' => $items,
+				'items_count' => $items_count,
+				'TXN_CODE' => $TXN_CODE,
+				'DOC_NO' => $DOC_NO,
+				'SYS_ID' => $SYS_ID,
+				'pallet_no' => $pallet_no,
+				'cnt_ship' => $cnt_ship,
+				'cnt_temp' => $cnt_temp,
+				'serial_temp' => $serial_temp,
+				'total_serial' => $total_serial,
+
+				]);
+		}
+
     /**
      * Show the form for creating a new resource.
      */
@@ -292,6 +436,105 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
     {
         //
     }
+
+		public function save_receiving(Request $request){
+
+			//dd($request->ghi_in_sr_no);
+			$cnt_serial = count($request->ghi_in_sr_no);
+			$conn = $this->conn_orion();
+
+			if($cnt_serial > 0){
+				foreach ($request->ghi_in_sr_no as $key => $value) {
+					$query = "INSERT INTO OT_GR_HHD_OUT_ITEM_SRNO_TEST (
+																ghi_out_gi_sys_id,
+																ghi_out_gi_gh_sys_id,
+																ghi_out_comp_code,
+																ghi_out_locn_code,
+																ghi_out_grn_txn_code,
+																ghi_out_grn_no,
+																ghi_out_gh_dt,
+																ghi_out_item_code,
+																ghi_out_grade_code_1,
+																ghi_out_grade_code_2,
+																ghi_out_uom_code,
+																ghi_out_qty,
+																ghi_out_qty_ls,
+																ghi_out_qty_bu,
+																ghi_out_sr_qty_bu,
+																ghi_out_ship_id,
+																ghi_out_gs_start_warr_dt,
+																ghi_out_gs_end_warr_dt,
+																ghi_out_pallet_no,
+																ghi_out_sr_no,
+																ghi_out_user_id,
+																ghi_out_act_sync_dt,
+																ghi_out_device_id,
+																ghi_out_device_name,
+																ghi_out_ticket_scan_dt,
+																ghi_out_comp_flag,
+																ghi_out_cr_dt,
+																ghi_out_cr_uid,
+																ghi_pallet_number
+															) VALUES (
+																'$request->ghi_in_gi_sys_id',
+																'$request->ghi_in_gi_gh_sys_id',
+																'$request->ghi_in_comp_code',
+																'$request->ghi_in_locn_code',
+																'$request->ghi_in_grn_txn_code',
+																'$request->ghi_in_grn_no',
+																'$request->ghi_in_gh_dt',
+																'$request->ghi_in_item_code',
+																'$request->ghi_in_grade_code_1',
+																'$request->ghi_in_grade_code_2',
+																'$request->ghi_in_uom_code',
+																'$request->ghi_in_qty',
+																'$request->ghi_in_qty_ls',
+																'$request->ghi_in_qty_bu',
+																'$request->ghi_in_out_qty_bu',
+																'$request->ghi_in_ship_id',
+																sysdate,
+																SYSDATE + interval '1' year,
+																'$request->ghi_in_pallet_no',
+																'$value',
+																'$request->ghi_in_user_id',
+																sysdate,
+																'Device Id',
+																'Device Name',
+																sysdate,
+																'N',
+																sysdate,
+																'user_id',
+																'0'
+															)";
+
+
+						$stid = oci_parse($conn, $query);
+						$exc = oci_execute($stid);
+
+						if(!$exc){
+							return response()->json([
+								'status' => false,
+								'message' => 'insert error'
+							]);
+						}
+				}
+			}else{
+				return response()->json([
+					'status' => false,
+					'message' => 'no serial',
+					'cnt_serial' => $cnt_serial
+				]);
+			}
+
+			TempReceiving::where('sys_id', $request->ghi_in_gi_sys_id)->where('user_id', $request->ghi_in_user_id)->delete();
+
+			return response()->json([
+				'status' => true,
+				'message' => 'insert Successfuly',
+				'temp' => 'delete Successfuly',
+			]);
+
+		}
 
 	public function save_putaway(Request $request){
 
