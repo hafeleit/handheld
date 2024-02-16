@@ -2,6 +2,7 @@
 
 @section('content')
 <style media="screen">
+
   .input-sm{
     font-size: 0.75rem;
   }
@@ -14,19 +15,52 @@
   .error {
     color: red;
   }
+
+  .loader{
+    display: block;
+    position: relative;
+    height: 12px;
+    width: 100%;
+    border: 1px solid #fff;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .loader::after {
+    content: '';
+    width: 40%;
+    height: 100%;
+    background: #FF3D00;
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    animation: animloader 2s linear infinite;
+  }
+
+  @keyframes animloader {
+    0% {
+      left: 0;
+      transform: translateX(-100%);
+    }
+    100% {
+      left: 100%;
+      transform: translateX(0%);
+    }
+  }
+
 </style>
 <div class="container">
     <div class="row">
-        
+
         <div id="tab-login" class="col-xl-5 col-lg-5 col-md-7 mx-lg-0" style="">
-            <div class="card card-plain">
+            <div class="card card-plain mt-5">
 
                 <div class="d-flex align-items-center" style="padding-bottom: 50px;">
-						
+
 					<p class="mb-0"><h3 class="text-primary" style="position: absolute;top: 14px;left: 50%;transform: translate(-50%, 0);">LOGIN</h3></p>
-						
+
 				</div>
-				
+
                 <div class="card-body">
                   <form id="login_form" action="{{ROUTE('hhd_home')}}" method="post" onsubmit="return login_submit()">
 				  {{ csrf_field() }}
@@ -64,8 +98,10 @@
                   <div class="text-center">
                       <button id="login_btn" type="submit" class="btn btn-sm btn-primary btn-sm w-50 mt-4 mb-0">Login</button>
                   </div>
+
                   </form>
                 </div>
+                <span class="" id="loader_data"></span>
             </div>
         </div>
     </div>
@@ -94,9 +130,21 @@
         closeErrorModal($('#ticket'));
       } );
     });
-	
+
+  function loader(){
+    $(':input[type="submit"]').prop('disabled', true);
+    $('#loader_data').addClass('loader');
+
+  }
+
+  function close_loader(){
+    $(':input[type="submit"]').prop('disabled', false);
+    $('#loader_data').removeClass('loader');
+
+  }
+
 	function picking_submit(act){
-		
+
 		let url = "";
 		if(act == 'picking'){
 			url = '{{ ROUTE("picking") }}';
@@ -105,7 +153,7 @@
 			url = '{{ ROUTE("pigeonhole") }}';
 		}
 		$('#select_module_form').attr('action', url).submit();
-		
+
 	}
 
     function login_submit(){
@@ -128,13 +176,17 @@
       }else{
 
         let check_wh = chk_wh_locn($('#txt_wh_code').val(), $('#txt_location').val());
+
         if(check_wh){
-          $('#login_date').val(curr_datetime());
-		  
-		  return true;
+            $('#login_date').val(curr_datetime());
+
+		        return true;
+
         }else{
           //$('#error-modal').modal('show');
+          close_loader();
           $('#txt_location').val('');
+
           showErrorModal($('#txt_wh_code'),'Invalid Warehouse code and location');
         }
       }
@@ -143,7 +195,7 @@
     }
 
     function chk_wh_locn(wh, locn){
-
+      loader();
       let chk_status = false;
       $.ajax({
         method: "GET",

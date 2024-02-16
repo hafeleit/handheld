@@ -2,6 +2,7 @@
 
 @section('content')
 <style media="screen">
+
   .input-sm{
     font-size: 0.75rem;
   }
@@ -14,6 +15,39 @@
   .error {
     color: red;
   }
+
+  .loader{
+    display: block;
+    position: relative;
+    height: 12px;
+    width: 100%;
+    border: 1px solid #fff;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .loader::after {
+    content: '';
+    width: 40%;
+    height: 100%;
+    background: #FF3D00;
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    animation: animloader 2s linear infinite;
+  }
+
+  @keyframes animloader {
+    0% {
+      left: 0;
+      transform: translateX(-100%);
+    }
+    100% {
+      left: 100%;
+      transform: translateX(0%);
+    }
+  }
+
 </style>
     <main class="main-content  mt-0">
         <section>
@@ -29,35 +63,37 @@
                     <div id="tab-picking" class="row" style="">
 						
 						
-                        <div class="col-xl-4 col-lg-5 col-md-7 mx-lg-0">
+                        <div class="col-xl-4 col-lg-5 col-md-7 mx-lg-0 mt-3">
                           <div class="card card-plain">
-						  
 							<div class="d-flex align-items-center ps-2 ">
                                 <div class="icon icon-sm" onclick="hhd_home_back()">
-									<img src="/img/house-icon.png" alt="profile_image" class="w-80 pt-1">
+									<img src="/img/house-icon.png" alt="profile_image" class="w-100 pt-1">
 								</div>
-                                <h3 class="text-primary" style="position: absolute;top: 5px;left: 50%;transform: translate(-50%, 0);">PIGEONHOLE</h3>
+                                <h3 class="text-primary mt-5" style="position: absolute;top: 5px;left: 50%;transform: translate(-50%, 0);">PIGEONHOLE</h3>
                                 <p class="ms-auto">
-									<div class="icon icon-sm text-end" onclick="hhd_home_back()">
-										<img src="/img/logout-icon.png" alt="profile_image" class="w-50">
+									<div id="btn_logout" class="icon icon-sm text-end">
+										<img src="/img/logout-icon.png" alt="profile_image" class="w-70 mt-2">
 									</div>
-									<a id="btn_logout" class="text-secondary text-xs" href="javascript::;" style="margin-right: -15px;">Logout</a>
+									<a id="btn_logout" class="text-secondary text-xs mt-2" href="javascript::;" style="margin-right: -8px;">Logout</a>
 								</p>
 								
                             </div>
-							<span class="text-xs" style="margin-left: -11px; margin-top: -4px;">
+							<span class="text-xs" style=" margin-top: 8px;">
 								<i class="ni ni-single-02 text-secondary text-xs"> {{$txt_username}}</i>
 							</span>
 							
-                              <div class="card-body p-0 mt-3">
+                              <div class="card-body p-0 mt-5">
                                 <table>
                                   <tr>
                                     <td class="input-sm" align="right">Ticket:</td>
-                                    <td>
+                                    <td style="position: relative">
                                       <input type="text" name="ticket" id="ticket" class="input-sm" required>
                                       <input type="hidden" name="ticket_scan_date" id="ticket_scan_date">
                                       <span id="label-st" style="font-weight: bold;display: none"> (S/T)</span>
                                       <p id="ticket_error" class="input-sm error" style="display:none">error</p>
+									  <span id="ticket_clear" style="position: absolute; top: 5px; left: 85%;">
+                                        <img src="/img/edit.png" alt="profile_image" class="" style="width: 16px;">
+                                      </span>
                                     </td>
 
                                   </tr>
@@ -107,6 +143,7 @@
                                     <button id="btn-save" type="submit" class="btn btn-sm btn-primary btn-sm w-50 mt-4 mb-0" disabled>Save</button>
                                 </div>
                               </div>
+							  <span class="mt-5" id="loader_data"></span>
                           </div>
                         </div>
                     </div>
@@ -169,11 +206,12 @@
     <script type="text/javascript">
 	
 	function hhd_home_back(){
+		$('#loader_data').addClass('loader');
 		$('#hhd_home_form').submit();
 	}
 
     function picking_submit(){
-
+		$('#loader_data').addClass('loader');
       $.ajax({
         method: "GET",
         url: "{{route('save_pgh')}}",
@@ -185,8 +223,9 @@
           login_date: $('#login_date').val(),
         }
       }).done(function( res ) {
-
-		console.log(res);
+		  
+		$('#loader_data').removeClass('loader');
+		//console.log(res);
 		$('.error').html('');
 		$('#btn-save').attr('disabled',true);
         $('#success-modal').modal('show');
@@ -194,6 +233,7 @@
 		//$('#success-modal').delay(1000).fadeOut(450);
 		setTimeout(function(){
 			$('#success-modal').modal("hide");
+			$('#ticket').attr('disabled', false);
 			$('#ticket').focus();
 		  }, 1000);
 
@@ -254,75 +294,98 @@
       });
       //LOGOUT
       $('#btn_logout').on('click', function(){
-
+		$('#loader_data').addClass('loader');
         window.location.href = "{{ROUTE('hhd_login')}}";
+      });
+	  
+	  $('#ticket_clear').on('click', function(){
+		$('#ticket').attr('disabled', false);
+		$('#form_picking')[0].reset();
+		$('#remaining').html('0');
+		$('#scan_pgh').css('background-color','gainsboro');
+		$('#scan_pgh').css('border-color','gainsboro');
+		$('#scan_pgh').attr('disabled', true);
+		$('#ticket').focus();
       });
 
       // TICKET
       $('#ticket').on('keyup', function(){
+		 
+		if( $('#ticket').val() != '' ){
+			$('#loader_data').addClass('loader');
+			$('#ticket').attr('disabled', true);
+			let ticket = $(this).val();
+			if(ticket == ''){
+			  return false;
+			}
+			
+			$.ajax({
+			  method: "GET",
+			  url: "{{route('search_pgh')}}",
+			  data: {
+				ticket: ticket,
+			  }
+			}).done(function( res ) {
+				$('#loader_data').removeClass('loader');
+			  //console.log(res);
+			  $('#ticket_scan_date').val(curr_datetime());
 
-        let ticket = $(this).val();
-        if(ticket == ''){
-          return false;
-        }
+			  if(res['status'] == false){
+				$('#ticket').attr('disabled', false);
+				
+				showErrorModal($('#ticket'),'Invalid Ticket scanned');
+
+				$('#btn-save').attr('disabled',true);
+
+				$('#item').val('');
+				$('#itemg1g2').val('');
+				$('#qty').val('');
+				$('#pgh').val('');
+				$('#remaining').html('0');
+
+				$('#ticket').focus();
+
+				return false;
+
+			  }else{
+				  
+				$('#item').val(res['data']['WHP_IN_ITEM_CODE']);
+				$('#itemg1g2').val(res['data']['WHP_IN_GRADE_CODE_1']+ '/' + res['data']['WHP_IN_GRADE_CODE_2']);
+				$('#qty').val(res['data']['WHP_IN_QTY']);
+				$('#pgh').val(res['data']['WHP_IN_BAR_CODE']);
+				$('#remaining').html(res['remaining']['REMAINING']);
+				
+				$('#scan_pgh').css('background-color','unset');
+				$('#scan_pgh').css('border-color','unset');
+				$('#scan_pgh').attr('disabled', false);
+				$('#scan_pgh').focus();
+
+			  }
+
+			});
+		}
 		
-        $.ajax({
-          method: "GET",
-          url: "{{route('search_pgh')}}",
-          data: {
-            ticket: ticket,
-          }
-        }).done(function( res ) {
-
-          console.log(res);
-          $('#ticket_scan_date').val(curr_datetime());
-
-          if(res['status'] == false){
-
-            showErrorModal($('#ticket'),'Invalid Ticket scanned');
-
-      		$('#btn-save').attr('disabled',true);
-
-            $('#item').val('');
-            $('#itemg1g2').val('');
-            $('#qty').val('');
-            $('#pgh').val('');
-            $('#remaining').html('0');
-
-            $('#ticket').focus();
-
-            return false;
-
-          }else{
-			  
-			$('#item').val(res['data']['WHP_IN_ITEM_CODE']);
-            $('#itemg1g2').val(res['data']['WHP_IN_GRADE_CODE_1']+ '/' + res['data']['WHP_IN_GRADE_CODE_2']);
-            $('#qty').val(res['data']['WHP_IN_QTY']);
-            $('#pgh').val(res['data']['WHP_IN_BAR_CODE']);
-            $('#remaining').html(res['remaining']['REMAINING']);
-            
-			$('#scan_pgh').css('background-color','unset');
-      		$('#scan_pgh').css('border-color','unset');
-      		$('#scan_pgh').attr('disabled', false);
-      		$('#scan_pgh').focus();
-
-          }
-
-        });
 
       });
 	  
 		$('#scan_pgh').on('keyup', function(){
-			if($(this).val() == $('#pgh').val()){
-				$('#pgh_scan_date').val(curr_datetime());
-				$('#btn-save').attr('disabled',false);
-				picking_submit();
-			}else{
-				$('#btn-save').attr('disabled',true);
-				showErrorModal($('#scan_pgh'),'Scan PGH not match');
-				$('#scan_pgh').val('');
-				$('#scan_pgh').focus();
+			$('#scan_pgh').attr('disabled',true);
+			if( $('#scan_pgh').val() != ''){
+				
+				$('#scan_pgh').attr('disabled', true);
+				if($(this).val() == $('#pgh').val()){
+					$('#pgh_scan_date').val(curr_datetime());
+					$('#btn-save').attr('disabled',false);
+					picking_submit();
+				}else{
+					$('#scan_pgh').attr('disabled', false);
+					$('#btn-save').attr('disabled',true);
+					showErrorModal($('#scan_pgh'),'Scan PGH not match');
+					$('#scan_pgh').val('');
+					$('#scan_pgh').focus();
+				}
 			}
+			
 		});
 
     });

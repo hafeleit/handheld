@@ -2,6 +2,7 @@
 
 @section('content')
 <style media="screen">
+
   .input-sm{
     font-size: 0.75rem;
   }
@@ -14,6 +15,39 @@
   .error {
     color: red;
   }
+
+  .loader{
+    display: block;
+    position: relative;
+    height: 12px;
+    width: 100%;
+    border: 1px solid #fff;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .loader::after {
+    content: '';
+    width: 40%;
+    height: 100%;
+    background: #FF3D00;
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    animation: animloader 2s linear infinite;
+  }
+
+  @keyframes animloader {
+    0% {
+      left: 0;
+      transform: translateX(-100%);
+    }
+    100% {
+      left: 100%;
+      transform: translateX(0%);
+    }
+  }
+
 </style>
     <main class="main-content  mt-0">
         <section>
@@ -29,25 +63,25 @@
                     <div id="tab-picking" class="row" style="">
 						
 						
-                        <div class="col-xl-4 col-lg-5 col-md-7 mx-lg-0">
+                        <div class="col-xl-4 col-lg-5 col-md-7 mx-lg-0 mt-3">
                           <div class="card card-plain">
 							<div class="d-flex align-items-center ps-2 ">
                                 <div class="icon icon-sm" onclick="hhd_home_back()">
-									<img src="/img/house-icon.png" alt="profile_image" class="w-80 pt-1">
+									<img src="/img/house-icon.png" alt="profile_image" class="w-100 pt-1">
 								</div>
-                                <h3 class="text-primary" style="position: absolute;top: 5px;left: 50%;transform: translate(-50%, 0);">PUT AWAY</h3>
+                                <h3 class="text-primary mt-5" style="position: absolute;top: 5px;left: 50%;transform: translate(-50%, 0);">PUT AWAY</h3>
                                 <p class="ms-auto">
-									<div class="icon icon-sm text-end" onclick="hhd_home_back()">
-										<img src="/img/logout-icon.png" alt="profile_image" class="w-50">
+									<div id="btn_logout" class="icon icon-sm text-end">
+										<img src="/img/logout-icon.png" alt="profile_image" class="w-70 mt-2">
 									</div>
-									<a id="btn_logout" class="text-secondary text-xs" href="javascript::;" style="margin-right: -15px;">Logout</a>
+									<a id="btn_logout" class="text-secondary text-xs mt-2" href="javascript::;" style="margin-right: -8px;">Logout</a>
 								</p>
 								
                             </div>
-							<span class="text-xs" style="margin-left: -11px; margin-top: -4px;">
+							<span class="text-xs" style=" margin-top: 8px;">
 								<i class="ni ni-single-02 text-secondary text-xs"> {{$txt_username}}</i>
 							</span>
-                              <div class="card-body p-0 mt-3">
+                              <div class="card-body p-0 mt-5">
 								  <div class="row">
 									<div class="col-6">
 										<div class="custom-control custom-checkbox text-end">
@@ -70,11 +104,14 @@
                                 <table>
                                   <tr>
                                     <td class="input-sm" align="right">Ticket:</td>
-                                    <td>
+                                    <td style="position: relative">
                                       <input type="text" name="ticket" id="ticket" class="input-sm" required>
                                       <input type="hidden" name="ticket_scan_date" id="ticket_scan_date">
                                       <span id="label-st" style="font-weight: bold;display: none"> (S/T)</span>
                                       <p id="ticket_error" class="input-sm error" style="display:none">error</p>
+									  <span id="ticket_clear" style="position: absolute; top: 5px; left: 85%;">
+                                        <img src="/img/edit.png" alt="profile_image" class="" style="width: 16px;">
+                                      </span>
                                     </td>
 
                                   </tr>
@@ -137,6 +174,7 @@
                                     <button id="btn-save" type="submit" class="btn btn-sm btn-primary btn-sm w-50 mt-4 mb-0" disabled>Save</button>
                                 </div>
                               </div>
+							  <span class="mt-5" id="loader_data"></span>
                           </div>
                         </div>
                     </div>
@@ -201,68 +239,13 @@
     <script type="text/javascript">
 	
 	function hhd_home_back(){
+		$('#loader_data').addClass('loader');
 		$('#hhd_home_form').submit();
 	}
 
-    function chk_wh_locn(wh, locn){
-
-      let chk_status = false;
-      $.ajax({
-        method: "GET",
-        url: "{{route('chk_wh_locn')}}",
-        async: false,
-        data: {
-          wh: wh,
-          locn: locn,
-        }
-      }).done(function(res){
-        chk_status = res['status'];
-      });
-
-      return chk_status;
-    }
-
-    function login_submit(){
-
-	  $('#username_error').css('display','none').html('');
-	  $('#wh_code_error').css('display','none').html('');
-	  $('#location_error').css('display','none').html('');
-
-    if( $('#username').val() == '' ){
-
-      $('#username_error').css('display','revert').html('Username not found');
-      $('#username').focus();
-
-    }else if( $('#wh_code').val() == '' ){
-      $('#wh_code_error').css('display','revert').html('WH Code not found');
-      $('#wh_code').focus();
-    }else if( $('#location').val() == '' ){
-      $('#location_error').css('display','revert').html('Location not found');
-      $('#location').focus();
-    }else{
-
-      let check_wh = chk_wh_locn($('#wh_code').val(), $('#location').val());
-      if(check_wh){
-        $('#login_date').val(curr_datetime());
-        $('#tab-login').css('display','none');
-        $('#tab-picking').css('display','');
-        $('.moving-tab').css('width','35%');
-        $('#txt_username').html('( '+$('#username').val()+' ) | ');
-        $('#ticket').focus();
-      }else{
-        //$('#error-modal').modal('show');
-        $('#location').val('');
-        showErrorModal($('#wh_code'),'Invalid Warehouse code and location');
-      }
-
-
-    }
-
-      return false;
-    }
-
     function putaway_submit(){
 		
+		$('#loader_data').addClass('loader');
 		let putaway_type = $('input[name="putaway_type"]:checked').val();
 		if (typeof putaway_type === "undefined") {
 			putaway_type = '';
@@ -286,7 +269,13 @@
 		  putaway_type: putaway_type,
         }
       }).done(function( res ) {
-
+		  
+		$('#loader_data').removeClass('loader');  
+		if( res['status'] == false ){
+			showErrorModal('',res['errors']);
+			return false;
+		}
+		
 		$('.error').html('');
 		$('#btn-save').attr('disabled',true);
 		$('#position').css('background-color','gainsboro');
@@ -302,6 +291,7 @@
 		//$('#success-modal').delay(1000).fadeOut(450);
 		setTimeout(function(){
 			$('#success-modal').modal("hide");
+			$('#ticket').attr('disabled', false);
 			$('#ticket').focus();
 		  }, 1000);
 
@@ -359,12 +349,27 @@
       });
       //LOGOUT
       $('#btn_logout').on('click', function(){
-
+		$('#loader_data').addClass('loader');
         window.location.href = "{{ROUTE('hhd_login')}}";
+      });
+	  
+	  $('#ticket_clear').on('click', function(){
+		$('#form_picking')[0].reset();
+		$('.error').html('');
+		$('#btn-save').attr('disabled',true);
+		$('#position').css('background-color','gainsboro');
+		$('#position').css('border-color','gainsboro');
+		$('#position').attr('disabled', true);
+		$('#serial').css('background-color','gainsboro');
+		$('#serial').css('border-color','gainsboro');
+		$('#serial').attr('disabled', true);
+		$('#ticket').attr('disabled', false);
+		$('#ticket').focus();
       });
 	  
 	  $('input[name="putaway_type"]').on('click', function(){
 		$('#ticket').val('');
+		$('#ticket').attr('disabled', false);
 		$('#position').css('background-color','gainsboro');
 		$('#position').css('border-color','gainsboro');
 		$('#position').attr('disabled', true);
@@ -392,108 +397,115 @@
 
       // TICKET
       $('#ticket').on('keyup', function(){
-		let pa_type = $('input[name="putaway_type"]:checked').val();
-		if (typeof pa_type === "undefined") {
-			pa_type = '';
-		}
-        let ticket = $(this).val();
-        if(ticket == ''){
-          return false;
-        }
-		
-        $.ajax({
-          method: "GET",
-          url: "{{route('search_putaway')}}",
-          data: {
-            ticket: ticket,
-            wh_code: $('#txt_wh_code').val(),
-            location: $('#txt_location').val(),
-			pa_type: pa_type,
-          }
-        }).done(function( res ) {
-
-          //console.log(res);
-          $('#ticket_scan_date').val(curr_datetime());
-
-          if(res['status'] == false){
-
-            //$('#ticket_error').css('display','revert').html('Ticket not found');
-
-            showErrorModal($('#ticket'),'Invalid Ticket scanned');
-
-            $('#label-st').css('display','none');
-
-      			$('#position').css('background-color','gainsboro');
-    		    $('#position').css('border-color','gainsboro');
-    		    $('#position').attr('disabled', true);
-    		    $('#position').val('');
-      			$('#position_error').html('');
-
-      			$('#serial').css('background-color','gainsboro');
-    		    $('#serial').css('border-color','gainsboro');
-    		    $('#serial').attr('disabled', true);
-    		    $('#serial').val('');
-      			$('#serial_error').html('');
-
-      			$('#btn-save').attr('disabled',true);
-      			$('#select_serial_all').css('display','none');
-
-            $('#itemg1g2').val('');
-            $('#item_desc').val('');
-            $('#pack_code').val('');
-            $('#pack_qty1').val('');
-            $('#pack_qty2').val('');
-            $('#base_qty_1').val('');
-            $('#base_qty_2').val('');
-
-            $('#ticket').focus();
-
-            return false;
-
-          }else{
-            $('#btn-save').attr('disabled',true);
-            $('#ticket_error').css('display','none').html('');
-      		  $('#position').css('background-color','unset');
-      		  $('#position').css('border-color','unset');
-      		  $('#position').attr('disabled', false);
-            if(res['data']['HPC_IN_STK_TAKE_YN'] == 'Y'){
-              $('#label-st').css('display','revert');
-            }else{
-              $('#label-st').css('display','none');
-            }
-
-            let pack_code = res['data']['HPC_IN_PACK_CODE']+'('+res['data']['HPC_IN_STK_UOM_CONV']+' '+res['data']['HPC_IN_BASE_UOM']+')';
-
-            $('#itemg1g2').val(res['data']['HPC_IN_ITEM_CODE']);
-            $('#item_desc').val(res['data']['HPC_IN_ITEM_DESC']);
-            $('#pack_code').val(pack_code);
-            $('#pack_qty1').val(res['data']['HPC_IN_QTY']);
-            $('#pack_qty2').val(res['data']['HPC_IN_QTY_LS']);
-            $('#base_qty_1').val(res['BASE_QTY']['BASE_QTY']);
-            $('#base_qty_2').val(res['data']['HPC_IN_UOM_CODE']);
-            $('#grade_code_1').val(res['data']['HPC_IN_GRADE_CODE_1']);
-            $('#grade_code_2').val(res['data']['HPC_IN_GRADE_CODE_2']);
-
-            $('#position').val('');
-      		  $('#select_serial_all').css('display','none');
-      		  $('#serial').css('background-color','gainsboro');
-      		  $('#serial').css('border-color','gainsboro');
-      		  $('#serial').attr('disabled', true);
-            $('#position').focus();
-          }
-
-        });
-
-      });
-
-      $('#position').on('keyup', function(){
 		  
+		if( $('#ticket').val() != ''){
+			$('#ticket').attr('disabled', true);
+			$('#loader_data').addClass('loader');
 			let pa_type = $('input[name="putaway_type"]:checked').val();
 			if (typeof pa_type === "undefined") {
 				pa_type = '';
 			}
+			let ticket = $(this).val();
+			if(ticket == ''){
+			  return false;
+			}
+			
+			$.ajax({
+			  method: "GET",
+			  url: "{{route('search_putaway')}}",
+			  data: {
+				ticket: ticket,
+				wh_code: $('#txt_wh_code').val(),
+				location: $('#txt_location').val(),
+				pa_type: pa_type,
+			  }
+			}).done(function( res ) {
+				$('#loader_data').removeClass('loader');
+			  //console.log(res);
+			  $('#ticket_scan_date').val(curr_datetime());
 
-		    if($(this).val() != ''){
+			  if(res['status'] == false){
+
+				//$('#ticket_error').css('display','revert').html('Ticket not found');
+				$('#ticket').attr('disabled', false);
+				showErrorModal($('#ticket'),'Invalid Ticket scanned');
+
+				$('#label-st').css('display','none');
+
+				$('#position').css('background-color','gainsboro');
+				$('#position').css('border-color','gainsboro');
+				$('#position').attr('disabled', true);
+				$('#position').val('');
+				$('#position_error').html('');
+
+				$('#serial').css('background-color','gainsboro');
+				$('#serial').css('border-color','gainsboro');
+				$('#serial').attr('disabled', true);
+				$('#serial').val('');
+				$('#serial_error').html('');
+
+				$('#btn-save').attr('disabled',true);
+				$('#select_serial_all').css('display','none');
+
+				$('#itemg1g2').val('');
+				$('#item_desc').val('');
+				$('#pack_code').val('');
+				$('#pack_qty1').val('');
+				$('#pack_qty2').val('');
+				$('#base_qty_1').val('');
+				$('#base_qty_2').val('');
+
+				$('#ticket').focus();
+
+				return false;
+
+			  }else{
+				$('#btn-save').attr('disabled',true);
+				$('#ticket_error').css('display','none').html('');
+				  $('#position').css('background-color','unset');
+				  $('#position').css('border-color','unset');
+				  $('#position').attr('disabled', false);
+				if(res['data']['HPC_IN_STK_TAKE_YN'] == 'Y'){
+				  $('#label-st').css('display','revert');
+				}else{
+				  $('#label-st').css('display','none');
+				}
+
+				let pack_code = res['data']['HPC_IN_PACK_CODE']+'('+res['data']['HPC_IN_STK_UOM_CONV']+' '+res['data']['HPC_IN_BASE_UOM']+')';
+
+				$('#itemg1g2').val(res['data']['HPC_IN_ITEM_CODE']);
+				$('#item_desc').val(res['data']['HPC_IN_ITEM_DESC']);
+				$('#pack_code').val(pack_code);
+				$('#pack_qty1').val(res['data']['HPC_IN_QTY']);
+				$('#pack_qty2').val(res['data']['HPC_IN_QTY_LS']);
+				$('#base_qty_1').val(res['BASE_QTY']['BASE_QTY']);
+				$('#base_qty_2').val(res['data']['HPC_IN_UOM_CODE']);
+				$('#grade_code_1').val(res['data']['HPC_IN_GRADE_CODE_1']);
+				$('#grade_code_2').val(res['data']['HPC_IN_GRADE_CODE_2']);
+
+				$('#position').val('');
+				  $('#select_serial_all').css('display','none');
+				  $('#serial').css('background-color','gainsboro');
+				  $('#serial').css('border-color','gainsboro');
+				  $('#serial').attr('disabled', true);
+				$('#position').focus();
+			  }
+
+			});
+		}
+		
+
+      });
+
+      $('#position').on('keyup', function(){
+		
+		if( $(this).val() != '' ){
+			$('#position').attr('disabled', true);
+			$('#loader_data').addClass('loader');
+			let pa_type = $('input[name="putaway_type"]:checked').val();
+			if (typeof pa_type === "undefined") {
+				pa_type = '';
+			}
 
 			$('#position_scan_date').val(curr_datetime());
 			$('#select_serial_all').find('option').remove();
@@ -516,7 +528,7 @@
 			  }
 			}).done(function( res ) {
 			  //console.log(res);
-
+				$('#loader_data').removeClass('loader');
 			  if(res['status'] == true){
 				  $('#position_error').css('display','none').html('');
 				  
@@ -527,12 +539,13 @@
 					$('#serial').focus();
 				  }else{
 					$('#btn-save').attr('disabled',false);
+					putaway_submit();
 				  }
 				  
-				  
-				  
 			  }else{
+
 				$('#position-error-modal').modal('show');
+				$('#position').attr('disabled', false);
 				$('#position').val('');
 				//$('#position_error').css('display','revert').html('Position not found');
 				$('#select_serial_all').css('display','none');
@@ -551,44 +564,36 @@
       });
 
       $('#serial').on('keyup', function(){
-
-        let serial = $(this).val();
-        if( serial != '' ){
-          $.ajax({
-            method: "GET",
-            url: "{{route('search_putaway')}}",
-            data: {
-				
-              serial: serial,
-              position: $('#position').val(),
-			  ticket: $('#ticket').val(),
-            }
-          }).done(function( res ) {
-
-            console.log(res);
-			if(res['status'] == true){
-				$('#btn-save').attr('disabled',false);
-			}else{
-				showErrorModal($('#serial'),'Invalid Serial/Batch Number');
-				$('#btn-save').attr('disabled',true);
+		  
+		if( $(this).val() != ''){
+			$('#serial').attr('disabled', true);
+			$('#loader_data').addClass('loader');
+			let serial = $(this).val();
+			if( serial != '' ){
+			  $.ajax({
+				method: "GET",
+				url: "{{route('search_putaway')}}",
+				data: {
+					
+				  serial: serial,
+				  position: $('#position').val(),
+				  ticket: $('#ticket').val(),
+				}
+			  }).done(function( res ) {
+				$('#loader_data').removeClass('loader');
+				//console.log(res);
+				if(res['status'] == true){
+					$('#btn-save').attr('disabled',false);
+					putaway_submit();
+				}else{
+					$('#serial').attr('disabled', false);
+					showErrorModal($('#serial'),'Invalid Serial/Batch Number');
+					$('#btn-save').attr('disabled',true);
+				}
+			  });
 			}
-            /*if(res['serial_flg'] == false){ // ถ้าไม่เจอ serial ให้แสดง serial ทั้งหมด
-              if(res['data'].length > 0){
-                //$('#serial_error').css('display','revert').html('Serial mismatch');
-                showErrorModal($('#serial'),'Invalid Serial/Batch Number');
-				        $('#btn-save').attr('disabled',true);
-              }else{
-                $('#serial_error').css('display','revert').html('Serial not found');
-                $('#pack_qty1').focus();
-              }
-              //$('#serial').val('');
-            }else{
-              $('#select_serial_all').css('display','none')
-              $('#serial_error').css('display','none').html('');
-			  $('#btn-save').attr('disabled',false);
-            }*/
-          });
-        }
+		}
+        
 
       });
 

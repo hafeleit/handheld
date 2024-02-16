@@ -8,13 +8,17 @@ use App\Models\TempReceiving;
 
 class PickingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-		public function conn_orion(){
 
-			$db = "(DESCRIPTION=(ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.3.6)(PORT = 1521)))(CONNECT_DATA=(SID=orcl)))" ;
-			$conn = oci_connect('HTH','HTH090866',$db);
+		public function conn_orion(){
+	
+			
+  			$MYDB = "(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = 10.34.72.129)(PORT = 1521))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = ORCL)))";	
+
+			$conn = oci_connect('HTH', 'HTH090866', $MYDB);
+			if (!$conn) {
+    				$e = oci_error();
+    				trigger_error(htmlentities($e['message'], ENT_QUOTES), E_USER_ERROR);
+			}
 			return $conn;
 
 		}
@@ -81,8 +85,8 @@ class PickingController extends Controller
 				$temp = TempReceiving::where('sys_id', $request->sys_id)->where('serial_number', $request->serial_number);
 				$cnt_temp = $temp->count();
 				$user_id_temp = $temp->first();
-				$q_cnt_serial = "SELECT Count(*) AS cnt_out FROM OT_GR_HHD_OUT_ITEM_SRNO_TEST WHERE  ghi_out_gi_sys_id = '".$request->sys_id."' AND ghi_out_sr_no = '".$request->serial_number."'";
-				//$q_cnt_serial = "SELECT Count(*) AS cnt_out FROM OT_GR_HHD_OUT_ITEM_SRNO_TEST WHERE  ghi_out_gi_sys_id = '147306438' AND ghi_out_sr_no = '1'";
+				$q_cnt_serial = "SELECT Count(*) AS cnt_out FROM OT_GR_HHD_OUT_ITEM_SRNO_HAFL WHERE ghi_out_gi_sys_id = '".$request->sys_id."' AND ghi_out_sr_no = '".$request->serial_number."'";
+				//$q_cnt_serial = "SELECT Count(*) AS cnt_out FROM OT_GR_HHD_OUT_ITEM_SRNO_HAFL WHERE  ghi_out_gi_sys_id = '147306438' AND ghi_out_sr_no = '1'";
 				$conn = $this->conn_orion();
 				$stid = oci_parse($conn, $q_cnt_serial);
 				oci_execute($stid);
@@ -124,14 +128,14 @@ class PickingController extends Controller
 				return response()->json([ 'status' => false, 'message' => 'no data', ]);
 			}
 
-			$query = "SELECT * FROM OT_WMS_SYNC_HHD_PAWAY_IN_TEST WHERE HPC_IN_TICKET_NO = '" . $request->ticket ."'";
+			$query = "SELECT * FROM OT_WMS_SYNC_HHD_PAWAY_IN_HAFL WHERE HPC_IN_TICKET_NO = '" . $request->ticket ."'";
 
 			if($request->pa_type != ''){
 				if($request->pa_type == 'P'){
-					$query = "SELECT * FROM OT_WMS_SYNC_HHD_PAWAY_IN_TEST WHERE HPC_IN_PALLET_NO = '" . $request->ticket ."'";
+					$query = "SELECT * FROM OT_WMS_SYNC_HHD_PAWAY_IN_HAFL WHERE HPC_IN_PALLET_NO = '" . $request->ticket ."'";
 				}
 				if($request->pa_type == 'G'){
-					$query = "SELECT * FROM OT_WMS_SYNC_HHD_PAWAY_IN_TEST WHERE HPC_IN_TICKET_NO = '" . $request->ticket ."'";
+					$query = "SELECT * FROM OT_WMS_SYNC_HHD_PAWAY_IN_HAFL WHERE HPC_IN_TICKET_NO = '" . $request->ticket ."'";
 				}
 			}
 
@@ -154,7 +158,7 @@ class PickingController extends Controller
 					SELECT
 						ROUND(((NVL(HPC_IN_QTY_BU, 0) / HPC_IN_BASE_UOM_LOOSE_1) / NVL(HPC_IN_BASE_UOM_CONV, 1)), 7) as BASE_QTY
 					FROM
-						OT_WMS_SYNC_HHD_PICK_IN_TEST
+						OT_WMS_SYNC_HHD_PICK_IN_HAFL
 					WHERE
 						hpc_in_ticket_no='".$request->ticket."'
 					AND
@@ -189,7 +193,7 @@ hpc_in_flex_13, hpc_in_flex_14, hpc_in_flex_15, hpc_in_flex_16, hpc_in_flex_17, 
 hpc_in_base_qty_ls, hpc_in_base_qty_bu, hpc_in_stk_take_yn, hpc_in_out_flag, hpc_in_dflt_pack_code, hpc_dflt_qty, hpc_dflt_qty_ls, hpc_dflt_qty_bu, hpc_in_conv_fact,
 hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_loose_1, hpc_in_base_uom_loose, hpc_in_base_uom_loose_1
 								from
-									OT_WMS_SYNC_HHD_PICK_IN_TEST
+									OT_WMS_SYNC_HHD_PICK_IN_HAFL
 								WHERE
 									hpc_in_ticket_no = '" . $request->ticket ."'
 								AND
@@ -210,7 +214,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 					SELECT
 						ROUND(((NVL(HPC_IN_QTY_BU, 0) / HPC_IN_BASE_UOM_LOOSE_1) / NVL(HPC_IN_BASE_UOM_CONV, 1)), 7) as BASE_QTY
 					FROM
-						OT_WMS_SYNC_HHD_PICK_IN_TEST
+						OT_WMS_SYNC_HHD_PICK_IN_HAFL
 					WHERE
 						hpc_in_ticket_no='".$request->ticket."'
 					AND
@@ -234,18 +238,18 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 				return response()->json([ 'status' => false, 'message' => 'no data', ]);
 			}
 
-			$query = "SELECT * FROM OT_WMS_HHD_PGH_IN_TEST WHERE WHP_IN_TICKET_NO ='".$request->ticket."'";
+			$query = "SELECT * FROM OT_WMS_HHD_PGH_IN_HAFL WHERE WHP_IN_TICKET_NO ='".$request->ticket."'";
 			$conn = $this->conn_orion();
 			$stid = oci_parse($conn, $query);
 			oci_execute($stid);
 			$ticket_data = oci_fetch_assoc($stid);
 
 			$query = "SELECT Count(*) as remaining FROM (
-  SELECT * FROM  OT_WMS_HHD_PGH_IN_TEST  WHERE  (WWP_IN_REF_TXN_CODE,wwp_in_ref_no) IN(
-    SELECT WWP_IN_REF_TXN_CODE,WWP_IN_REF_NO FROM OT_WMS_HHD_PGH_IN_TEST  WHERE   WHP_IN_TICKET_NO ='".$request->ticket."')
-    AND WHP_IN_WWOD_SYS_ID  NOT IN (SELECT WHP_OUT_WWOD_SYS_ID FROM OT_WMS_HHD_PGH_OUT_TEST  WHERE WWP_IN_REF_TXN_CODE=WWP_OUT_REF_TXN_CODE AND WWP_IN_REF_NO=WWP_OUT_REF_NO)
+  SELECT * FROM  OT_WMS_HHD_PGH_IN_HAFL  WHERE  (WWP_IN_REF_TXN_CODE,wwp_in_ref_no) IN(
+    SELECT WWP_IN_REF_TXN_CODE,WWP_IN_REF_NO FROM OT_WMS_HHD_PGH_IN_HAFL  WHERE   WHP_IN_TICKET_NO ='".$request->ticket."')
+    AND WHP_IN_WWOD_SYS_ID  NOT IN (SELECT WHP_OUT_WWOD_SYS_ID FROM OT_WMS_HHD_PGH_OUT_HAFL  WHERE WWP_IN_REF_TXN_CODE=WWP_OUT_REF_TXN_CODE AND WWP_IN_REF_NO=WWP_OUT_REF_NO)
     MINUS
-    SELECT * FROM  OT_WMS_HHD_PGH_IN_TEST WHERE   WHP_IN_TICKET_NO ='".$request->ticket."')";
+    SELECT * FROM  OT_WMS_HHD_PGH_IN_HAFL WHERE   WHP_IN_TICKET_NO ='".$request->ticket."')";
 			$conn = $this->conn_orion();
 			$stid = oci_parse($conn, $query);
 			oci_execute($stid);
@@ -280,7 +284,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 
 		public function search_serial(Request $request){
 
-			$query_chk_position = "select HPC_IN_SUGG_POSN from OT_WMS_SYNC_HHD_PICK_IN_TEST
+			$query_chk_position = "select HPC_IN_SUGG_POSN from OT_WMS_SYNC_HHD_PICK_IN_HAFL
 								WHERE
 									hpc_in_ticket_no = '" . $request->ticket ."'
 								AND
@@ -305,7 +309,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 					HPC_BS_BATCH_NO,
 					HPC_BS_PALLET_NO
 				FROM
-					OT_WMS_SYNC_HHD_PICK_BTSR_TEST
+					OT_WMS_SYNC_HHD_PICK_BTSR_HAFL
 				WHERE
 					HPC_BS_POSN_CODE='".$request->position."'
 				AND
@@ -343,15 +347,15 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 
 		public function search_receiving(Request $request){
 
-			$query = "SELECT * FROM OT_GR_HHD_IN_ITEM_SRNO_TEST WHERE ghi_in_ship_id = '".$request->ship_id."'";
+			$query = "SELECT * FROM OT_GR_HHD_IN_ITEM_SRNO_HAFL WHERE ghi_in_ship_id = '".$request->ship_id."'";
 			if($request->sys_id != ''){
-				$query = "SELECT * FROM OT_GR_HHD_IN_ITEM_SRNO_TEST WHERE GHI_IN_GI_SYS_ID = '".$request->sys_id."'";
+				$query = "SELECT * FROM OT_GR_HHD_IN_ITEM_SRNO_HAFL WHERE GHI_IN_GI_SYS_ID = '".$request->sys_id."'";
 			}
 			if($request->txn_code != '' && $request->doc_no != ''){
-				$query = "SELECT * FROM OT_GR_HHD_IN_ITEM_SRNO_TEST WHERE GHI_IN_TXN_CODE = '".$request->txn_code."' AND GHI_IN_DOC_NO = '".$request->doc_no."'" ;
+				$query = "SELECT * FROM OT_GR_HHD_IN_ITEM_SRNO_HAFL WHERE GHI_IN_TXN_CODE = '".$request->txn_code."' AND GHI_IN_DOC_NO = '".$request->doc_no."'" ;
 			}
 
-			$q_get_pallet = "SELECT Max(ghi_out_pallet_no) AS ghi_out_pallet_no FROM OT_GR_HHD_OUT_ITEM_SRNO_TEST";
+			$q_get_pallet = "SELECT Max(ghi_out_pallet_no) AS ghi_out_pallet_no FROM OT_GR_HHD_OUT_ITEM_SRNO_HAFL";
 			$conn = $this->conn_orion();
 			$stid = oci_parse($conn, $query);
 			$stid2 = oci_parse($conn, $query);
@@ -367,7 +371,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 			$serial_temp = [];
 			if($res){
 
-				$q_cnt_ship = "SELECT Count(*) AS cnt_ship FROM OT_GR_HHD_OUT_ITEM_SRNO_TEST WHERE ghi_out_gi_sys_id = '".$res['GHI_IN_GI_SYS_ID']."'";
+				$q_cnt_ship = "SELECT Count(*) AS cnt_ship FROM OT_GR_HHD_OUT_ITEM_SRNO_HAFL WHERE ghi_out_gi_sys_id = '".$res['GHI_IN_GI_SYS_ID']."'";
 				$stid4 = oci_parse($conn, $q_cnt_ship);
 				oci_execute($stid4);
 				$cnt_ship = oci_fetch_assoc($stid4);
@@ -445,7 +449,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 
 			if($cnt_serial > 0){
 				foreach ($request->ghi_in_sr_no as $key => $value) {
-					$query = "INSERT INTO OT_GR_HHD_OUT_ITEM_SRNO_TEST (
+					$query = "INSERT INTO OT_GR_HHD_OUT_ITEM_SRNO_HAFL (
 																ghi_out_gi_sys_id,
 																ghi_out_gi_gh_sys_id,
 																ghi_out_comp_code,
@@ -537,6 +541,8 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 		}
 
 	public function save_putaway(Request $request){
+		
+		try {
 
 		$ticket = $request->ticket ?? '';
 		$ticket_scan_date = $request->ticket_scan_date ?? '';
@@ -558,7 +564,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 			if($putaway_type == 'G'){
 				$where = 'HPC_IN_FLEX_01';
 
-				$query_g = "SELECT HPC_IN_FLEX_01 FROM OT_WMS_SYNC_HHD_PAWAY_IN_TEST WHERE HPC_IN_TICKET_NO = '" . $ticket . "'";
+				$query_g = "SELECT HPC_IN_FLEX_01 FROM OT_WMS_SYNC_HHD_PAWAY_IN_HAFL WHERE HPC_IN_TICKET_NO = '" . $ticket . "'";
 				$conn = $this->conn_orion();
 				$stid = oci_parse($conn, $query_g);
 				oci_execute($stid);
@@ -567,7 +573,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 			}
 		}
 		$query = "
-		INSERT INTO OT_WMS_SYNC_HHD_PAWAY_OUT_TEST
+		INSERT INTO OT_WMS_SYNC_HHD_PAWAY_OUT_HAFL
 			SELECT
 				hpc_in_comp_code,
 				hpc_in_wh_code,
@@ -649,7 +655,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 				'".$username."' as hpc_out_cr_uid,
 				TO_DATE('".$login_date."', 'DD/MM/YYYY HH24:MI:SS') as hpc_out_cr_dt
 			FROM
-				OT_WMS_SYNC_HHD_PAWAY_IN_TEST
+				OT_WMS_SYNC_HHD_PAWAY_IN_HAFL
 			WHERE
 				$where = '".$ticket."'
 		";
@@ -669,6 +675,15 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 				'message' => 'insert error'
 			]);
 		}
+		
+		}catch (\Exception $e) {
+
+			return response()->json([
+				'status' => false,
+				'errors' => $e->getMessage(),
+			]);
+			//return $e->getMessage();
+		}
 	}
 
 	public function save_pgh(Request $request){
@@ -680,7 +695,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 		$login_date = $request->login_date ?? '';
 
 		$query = "
-		INSERT INTO OT_WMS_HHD_PGH_OUT_TEST
+		INSERT INTO OT_WMS_HHD_PGH_OUT_HAFL
 			SELECT
 				whp_in_comp_code,
 				whp_in_wh_code,
@@ -723,7 +738,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 				whp_in_base_uom_qty_ls,
 				whp_in_base_uom_qty_bu
 			FROM
-				OT_WMS_HHD_PGH_IN_TEST
+				OT_WMS_HHD_PGH_IN_HAFL
 			WHERE
 				WHP_IN_TICKET_NO = '".$ticket."'
 		";
@@ -769,7 +784,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 				if($ticket != ''){
 
 					$query = "
-						insert into OT_WMS_SYNC_HHD_PICK_OUT_TEST
+						insert into OT_WMS_SYNC_HHD_PICK_OUT_HAFL
 							select
 								hpc_in_comp_code,
 								hpc_in_wh_code,
@@ -803,10 +818,10 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 								case
 									when hpc_in_srno is null and hpc_in_batch_no is null then hpc_in_pallet_no
 									when hpc_in_srno is not null then (
-										SELECT HPC_BS_PALLET_NO FROM OT_WMS_SYNC_HHD_PICK_BTSR_TEST
+										SELECT HPC_BS_PALLET_NO FROM OT_WMS_SYNC_HHD_PICK_BTSR_HAFL
 										WHERE hpc_bs_posn_code = '".$position."' AND hpc_bs_item_code = '".$item_code."' AND hpc_bs_srno = '".$serial_no."')
 									else (
-										SELECT HPC_BS_PALLET_NO FROM OT_WMS_SYNC_HHD_PICK_BTSR_TEST
+										SELECT HPC_BS_PALLET_NO FROM OT_WMS_SYNC_HHD_PICK_BTSR_HAFL
 										WHERE hpc_bs_posn_code = '".$position."' AND hpc_bs_item_code = '".$item_code."' AND HPC_BS_BATCH_NO = '".$serial_no."')
 						 		end,
 						 		case
@@ -852,7 +867,7 @@ hpc_in_base_uom_conv, hpc_in_stk_uom_conv, hpc_in_stk_uom_loose, hpc_in_stk_uom_
 							 	'',
 								( ROUND(((NVL(hpc_in_qty, 0) + (NVL(HPC_IN_QTY_LS, 0) / HPC_IN_STK_UOM_LOOSE_1)) * HPC_IN_STK_UOM_CONV) * HPC_IN_BASE_UOM_LOOSE_1))
 							FROM
-								ot_wms_sync_hhd_pick_in_test
+								OT_WMS_SYNC_HHD_PICK_IN_HAFL
 							where
 								hpc_in_ticket_no = '".$ticket."'
 					";

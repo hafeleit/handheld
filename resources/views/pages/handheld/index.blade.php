@@ -2,6 +2,7 @@
 
 @section('content')
 <style media="screen">
+
   .input-sm{
     font-size: 0.75rem;
   }
@@ -14,29 +15,58 @@
   .error {
     color: red;
   }
+
+  .loader{
+    display: block;
+    position: relative;
+    height: 12px;
+    width: 100%;
+    border: 1px solid #fff;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .loader::after {
+    content: '';
+    width: 40%;
+    height: 100%;
+    background: #FF3D00;
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    animation: animloader 2s linear infinite;
+  }
+
+  @keyframes animloader {
+    0% {
+      left: 0;
+      transform: translateX(-100%);
+    }
+    100% {
+      left: 100%;
+      transform: translateX(0%);
+    }
+  }
+
 </style>
 <div class="container">
 
     <div class="row" id="icon_box">
-        <div class="col-xl-4" style="position: relative;">
+        <div class="col-xl-4 mt-3" style="position: relative;">
             <div class="row">
-					<div class="d-flex align-items-center mb-4">
-						<!--<i class="ni ni-single-02 text-secondary opacity-10 text-xs"> {{$txt_username}}</i>-->
-                                
-                                <h3 class="text-primary" style="position: absolute;top: 5px;left: 50%;transform: translate(-50%, 0);">
-									
-									HOME
-								</h3>
-                                <p class="ms-auto">
-									<div class="icon icon-sm text-end" onclick="hhd_home_back()">
-										<img src="/img/logout-icon.png" alt="profile_image" class="w-50">
-									</div>
-									<a id="btn_logout" class="text-secondary text-xs" href="javascript::;" style="margin-right: -15px;">Logout</a>
-								</p>
-								
-                            </div>
-							
-					
+
+					<div class="d-flex align-items-center ps-2 mb-6">
+
+						<h3 class="text-primary mt-5" style="position: absolute;top: 5px;left: 50%;transform: translate(-50%, 0);">HOME</h3>
+						<p class="ms-auto">
+							<div id="btn_logout" class="icon icon-sm text-end" onclick="hhd_home_back()">
+								<img src="/img/logout-icon.png" alt="profile_image" class="w-70 mt-2">
+							</div>
+							<a id="btn_logout" class="text-secondary text-xs mt-2" href="javascript::;" style="margin-right: -8px;">Logout</a>
+						</p>
+
+					</div>
+
 				  <form id="select_module_form" action="" method="post" >
 					{{ csrf_field() }}
 					<input type="hidden" name="login_date" id="login_date" value="{{$login_date}}" />
@@ -82,6 +112,7 @@
                         Receiving
                       </div>
                   </div>
+                  <span class="mt-5 " id="loader_data"></span>
             </div>
         </div>
     </div>
@@ -110,12 +141,13 @@
         closeErrorModal($('#ticket'));
       } );
 	  $('#btn_logout').on('click', function(){
+        $('#loader_data').addClass('loader');
         window.location.href = "{{ROUTE('hhd_login')}}";
       });
     });
 
 	function picking_submit(act){
-
+    $('#loader_data').addClass('loader');
 		let url = "";
 		if(act == 'picking'){
 			url = '{{ ROUTE("picking") }}';

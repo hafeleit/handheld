@@ -2,6 +2,7 @@
 
 @section('content')
 <style media="screen">
+
   .input-sm{
     font-size: 0.75rem;
   }
@@ -15,10 +16,36 @@
     color: red;
   }
 
-  select {
-    padding: 4px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+  .loader{
+    display: block;
+    position: relative;
+    height: 12px;
+    width: 100%;
+    border: 1px solid #fff;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .loader::after {
+    content: '';
+    width: 40%;
+    height: 100%;
+    background: #FF3D00;
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    animation: animloader 2s linear infinite;
+  }
+
+  @keyframes animloader {
+    0% {
+      left: 0;
+      transform: translateX(-100%);
+    }
+    100% {
+      left: 100%;
+      transform: translateX(0%);
+    }
   }
 
 </style>
@@ -47,27 +74,27 @@
                       <input type="hidden" name="ghi_in_out_qty_bu" id="ghi_in_out_qty_bu">
                     <div id="tab-picking" class="row" style="">
 
-                        <div class="col-xl-4 col-lg-5 col-md-7 mx-lg-0">
+                        <div class="col-xl-4 col-lg-5 col-md-7 mx-lg-0 mt-3">
                           <div class="card card-plain">
 
 							<div class="d-flex align-items-center ps-2 ">
                                 <div class="icon icon-sm" onclick="hhd_home_back()">
-									<img src="/img/house-icon.png" alt="profile_image" class="w-80 pt-1">
+									<img src="/img/house-icon.png" alt="profile_image" class="w-100 pt-1">
 								</div>
-                                <h3 class="text-primary" style="position: absolute;top: 5px;left: 50%;transform: translate(-50%, 0);">RECEIVING</h3>
+                                <h3 class="text-primary mt-5" style="position: absolute;top: 5px;left: 50%;transform: translate(-50%, 0);">RECEIVING</h3>
                                 <p class="ms-auto">
-									<div class="icon icon-sm text-end" onclick="hhd_home_back()">
-										<img src="/img/logout-icon.png" alt="profile_image" class="w-50">
+									<div id="btn_logout" class="icon icon-sm text-end">
+										<img src="/img/logout-icon.png" alt="profile_image" class="w-70 mt-2">
 									</div>
-									<a id="btn_logout" class="text-secondary text-xs" href="javascript::;" style="margin-right: -15px;">Logout</a>
+									<a id="btn_logout" class="text-secondary text-xs mt-2" href="javascript::;" style="margin-right: -8px;">Logout</a>
 								</p>
-
+								
                             </div>
-							<span class="text-xs" style="margin-left: -11px; margin-top: -4px;">
+							<span class="text-xs" style=" margin-top: 8px;">
 								<i class="ni ni-single-02 text-secondary text-xs"> {{$txt_username}}</i>
 							</span>
 
-                              <div class="card-body p-0">
+                              <div class="card-body p-0 mt-5">
 								  <div class="row">
 									<div class="col-6">
 										<div class="custom-control custom-checkbox text-end">
@@ -89,11 +116,14 @@
                                 <table>
                                   <tr>
                                     <td class="input-sm" align="right">Ship ID:</td>
-                                    <td>
+                                    <td style="position: relative">
                                       <input type="text" name="ship_id" id="ship_id" class="input-sm" required>
                                       <input type="hidden" name="ship_id_scan_date" id="ship_id_scan_date">
                                       <span id="label-st" style="font-weight: bold;display: none"> (S/T)</span>
                                       <p id="ship_id_error" class="input-sm error" style="display:none">error</p>
+									  <span id="ticket_clear" style="position: absolute; top: 5px; left: 72%;">
+                                        <img src="/img/edit.png" alt="profile_image" class="" style="width: 16px;">
+                                      </span>
                                     </td>
 
                                   </tr>
@@ -140,7 +170,7 @@
                                       <label id="qty3"></label>
                                       <select class="input-sm" id="serials" name="serials" style="width: 20px; display: none">
                                       </select>
-                                      <i class="ni ni-bullet-list-67" id="btn_show_serials" style="display: none"></i>
+                                      <i class="ni ni-bullet-list-67 text-warning" id="btn_show_serials" style="display: none"></i>
                                     </td>
                                   </tr>
                                 </table>
@@ -149,6 +179,7 @@
                                     <button id="btn-save" type="submit" class="btn btn-sm btn-primary btn-sm w-50 mt-1 mb-0" disabled>Close Pallet</button>
                                 </div>
                               </div>
+							  <span class="mt-5" id="loader_data"></span>
                           </div>
                         </div>
                     </div>
@@ -238,10 +269,12 @@
     <script type="text/javascript">
 
   	function hhd_home_back(){
+		$('#loader_data').addClass('loader');
   		$('#hhd_home_form').submit();
   	}
 
     function receiving_submit(){
+		$('#loader_data').addClass('loader');
       var serials_list = [];
       $('#serials option').each(function() {
           serials_list.push($(this).val());
@@ -279,7 +312,8 @@
 
         }
       }).done(function( res ) {
-        console.log(res);
+		$('#loader_data').removeClass('loader');
+        //console.log(res);
         if(res['status']){
           hide_fields($('#TXN_CODE'));
           hide_fields($('#DOC_NO'));
@@ -299,8 +333,6 @@
           $('#serials').hide();
           $('#form_picking')[0].reset();
           $('#serials').find('option').remove();
-
-
 
         }else{
           alert('Save error');
@@ -354,7 +386,6 @@
 
     //  $('#modal-serials').modal('show');
 
-
       $('.btn-close-serials').on('click', function(){
         $('#serial').focus();
       });
@@ -376,12 +407,31 @@
       });
 
       $('#btn_logout').on('click', function(){
-
+		$('#loader_data').addClass('loader');
         window.location.href = "{{ROUTE('hhd_login')}}";
+      });
+	  
+	  $('#ticket_clear').on('click', function(){
+		  hide_fields($('#TXN_CODE'));
+          hide_fields($('#DOC_NO'));
+		  hide_fields($('#serial'));
+		  $('#items').hide();
+          $('#seq_items_count').hide();
+          $('#items_count').hide();
+          $('#qty1').hide();
+          $('#qty2').hide();
+          $('#qty3').hide();
+          $('#TXN_CODE_DOC_NO').hide();
+          $('#serials').hide();
+          $('#form_picking')[0].reset();
+          $('#serials').find('option').remove();
+		  show_fields($('#ship_id'));
+		  $('#ship_id').focus();
       });
 
   	  $('input[name="putaway_type"]').on('click', function(){
 
+        $('#ship_id').attr('disabled',false);
         $('#btn-save').attr('disabled',true);
 
     		$('#ship_id').val('');
@@ -428,6 +478,7 @@
 
       $('#TXN_CODE').on('keyup', function(){
         if($(this).val() != ''){
+			$('#TXN_CODE').attr('disabled',true);
           $('#DOC_NO').focus();
         }
       });
@@ -452,7 +503,7 @@
             }
           }).done(function( res ){
             $('#serial').val('');
-            console.log(res);
+            //console.log(res);
             if(res['status']){
               let count_qty = parseInt($('#qty1').html()) - 1;
               let sum_qty = parseInt($('#qty3').html()) + 1;
@@ -465,8 +516,12 @@
               $('#btn_show_serials').show();
               $('#serials_list').val(serial_number);
               $('#btn-save').attr('disabled',false);
-
-              $('#serial').focus();
+			  
+			  if( count_qty > 0 ){
+				$('#serial').focus();  
+			  }else{
+				receiving_submit();
+			  }
             }else{
               showErrorModal($('#serial'),res['msg']);
             }
@@ -478,7 +533,12 @@
       });
 
       $('#DOC_NO').on('keyup', function(){
-        if($(this).val() != ''){
+		  
+		if( $(this).val() != '' ){
+			
+		  $('#loader_data').addClass('loader');
+			$('#DOC_NO').attr('disabled',true);
+		  $('#loader_data').addClass('loader');
           let txn_code = $('#TXN_CODE').val();
           let doc_no = $('#DOC_NO').val();
           let user_id = $('#txt_username').val();
@@ -491,17 +551,32 @@
               user_id: user_id,
             }
           }).done(function( res ) {
-            console.log(res);
+            //console.log(res);
+			$('#loader_data').removeClass('loader');
             if(res['status'] == true){
               load_data(res);
-              $('#serial').focus();
-            }
+			  if( res['total_serial'] > 0 ){
+				$('#serial').focus();  
+			  }else{
+				showErrorModal('','Finished receiving the item.');
+			  }
+              
+            }else{
+				
+				showErrorModal($('#ship_id'),'Invalid GRN');
+				$('#DOC_NO').attr('disabled',false);
+				$('#DOC_NO').focus();
+			}
           });
+		  
         }
       });
 
       $('#ship_id').on('keyup', function(){
-        if($(this).val() != ''){
+		  
+        if( $(this).val() != '' ){
+		  $('#ship_id').attr('disabled',true);
+		  $('#loader_data').addClass('loader');
           let ship_id = $(this).val();
           let user_id = $('#txt_username').val();
           $.ajax({
@@ -512,11 +587,11 @@
               user_id: user_id,
             }
           }).done(function( res ) {
-
-            console.log(res);
+			$('#loader_data').removeClass('loader');
+            //console.log(res);
             $('#ship_id_scan_date').val(curr_datetime());
             if(res['status'] == false){
-
+			  $('#ship_id').attr('disabled',false);
               showErrorModal($('#ship_id'),'Invalid ship id scanned');
               $('#ship_id').focus();
 
@@ -525,7 +600,11 @@
             }else{
 
               load_data(res);
-              $('#serial').focus();
+			  if( res['total_serial'] > 0 ){
+				$('#serial').focus();  
+			  }else{
+				showErrorModal('','Finished receiving the item.');
+			  }
             }
 
           });
@@ -535,7 +614,10 @@
 
       $('#items').on('change', function() {
 
+		$('#loader_data').addClass('loader');
         $('#btn-save').attr('disabled',true);
+		$('#items').attr('disabled',true);
+		$('#TXN_CODE_DOC_NO').attr('disabled',true);
         $('#serials').find('option').remove();
         $('#qty3').html('0');
         var idx = this.selectedIndex;
@@ -553,14 +635,25 @@
             user_id: user_id,
           }
         }).done(function( res ) {
-          console.log(res);
+          //console.log(res);
+		  $('#items').attr('disabled',false);
+		  $('#TXN_CODE_DOC_NO').attr('disabled',false);
+		  $('#loader_data').removeClass('loader');
           load_data(res, 'item_select');
-          $('#serial').focus();
+		  if( res['total_serial'] > 0 ){
+			$('#serial').focus();  
+		  }else{
+			showErrorModal('','Finished receiving the item.');
+		  }
         });
 
       });
 
       $('#TXN_CODE_DOC_NO').on('change', function() {
+		 
+		$('#loader_data').addClass('loader');
+		$('#items').attr('disabled',true);
+		$('#TXN_CODE_DOC_NO').attr('disabled',true);
         $('#btn-save').attr('disabled',true);
         $('#serials').find('option').remove();
         $('#qty3').html('0');
@@ -580,10 +673,17 @@
             user_id: user_id,
           }
         }).done(function( res ) {
-          console.log(res);
+          //console.log(res);
+		  $('#loader_data').removeClass('loader');
+		  $('#items').attr('disabled',false);
+		  $('#TXN_CODE_DOC_NO').attr('disabled',false);
           if(res['status'] == true){
             load_data(res, 'item_select');
-            $('#serial').focus();
+			if( res['total_serial'] > 0 ){
+				$('#serial').focus();  
+			  }else{
+				showErrorModal('','Finished receiving the item.');
+			  }
           }
         });
 
